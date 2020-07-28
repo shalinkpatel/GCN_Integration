@@ -1,0 +1,54 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 10907630
+##  Job Name : tunnel
+##  Nodelist : gpu1209
+##      CPUs : 
+##   Mem/CPU : 10240 MB
+## Directory : /gpfs_home/spate116/singhlab/GCN/GRN/arboreto
+##   Started : Thu Mar 12 00:07:57 EDT 2020
+###############################################################################
+
+    Copy/Paste this in your local terminal to ssh tunnel with remote
+    -----------------------------------------------------------------
+    ssh -N -L 8304:172.20.208.9:8304 spate116@ssh.ccv.brown.edu
+    -----------------------------------------------------------------
+    Then open a browser on your local machine to the following address
+    ------------------------------------------------------------------
+    localhost:8304  (prefix w/ https:// if using password)
+    ------------------------------------------------------------------
+    
+[I 00:08:03.566 LabApp] JupyterLab extension loaded from /gpfs_home/spate116/ml/lib/python3.7/site-packages/jupyterlab
+[I 00:08:03.569 LabApp] JupyterLab application directory is /gpfs_home/spate116/ml/share/jupyter/lab
+[I 00:08:03.572 LabApp] Serving notebooks from local directory: /gpfs_home/spate116/singhlab/GCN/GRN/arboreto
+[I 00:08:03.572 LabApp] The Jupyter Notebook is running at:
+[I 00:08:03.572 LabApp] http://172.20.208.9:8304/?token=4b82575beec24c4a86401cf8ede9045f404d12d81af4d054
+[I 00:08:03.572 LabApp]  or http://127.0.0.1:8304/?token=4b82575beec24c4a86401cf8ede9045f404d12d81af4d054
+[I 00:08:03.572 LabApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 00:08:03.595 LabApp] 
+    
+    To access the notebook, open this file in a browser:
+        file:///gpfs_home/spate116/.local/share/jupyter/runtime/nbserver-66996-open.html
+    Or copy and paste one of these URLs:
+        http://172.20.208.9:8304/?token=4b82575beec24c4a86401cf8ede9045f404d12d81af4d054
+     or http://127.0.0.1:8304/?token=4b82575beec24c4a86401cf8ede9045f404d12d81af4d054
+[I 00:08:57.783 LabApp] Build is up to date
+-\|/-\[I 00:08:58.978 LabApp] Kernel started: 7396fac5-9fc8-4c29-a27a-8ce7c01e1c68
+|/-\|/-\|/-\|/-\|/-\[I 00:09:02.316 LabApp] Kernel shutdown: 7396fac5-9fc8-4c29-a27a-8ce7c01e1c68
+[I 00:09:07.906 LabApp] Kernel started: ce837763-9391-4c1d-bee1-d8c2984cf905
+[I 00:10:59.277 LabApp] Saving file at /HEPG2.ipynb
+[I 00:21:45.083 LabApp] Starting buffering for ce837763-9391-4c1d-bee1-d8c2984cf905:9b86c0bd-76c3-4b85-95e6-1057e5b933fd
+[I 00:21:45.134 LabApp] Restoring connection for ce837763-9391-4c1d-bee1-d8c2984cf905:9b86c0bd-76c3-4b85-95e6-1057e5b933fd
+[W 00:24:15.135 LabApp] WebSocket ping timeout after 119995 ms.
+[I 00:24:20.136 LabApp] Starting buffering for ce837763-9391-4c1d-bee1-d8c2984cf905:9b86c0bd-76c3-4b85-95e6-1057e5b933fd
+[I 00:26:28.083 LabApp] Build is up to date
+[I 00:27:53.092 LabApp] Starting buffering for ce837763-9391-4c1d-bee1-d8c2984cf905:a5548c04-76f0-4171-80ef-6b2c7a9085b2
+[I 00:36:49.562 LabApp] Build is up to date
+[I 00:38:50.595 LabApp] Saving file at /HEPG2.ipynb
+[I 11:10:43.142 LabApp] Starting buffering for ce837763-9391-4c1d-bee1-d8c2984cf905:5d8260f1-c47e-4696-a71b-f399a1a31a14
+[W 11:13:14.389 LabApp] WebSocket ping timeout after 119996 ms.
+[W 11:13:14.410 LabApp] WebSocket ping timeout after 119996 ms.
+[W 11:13:14.427 LabApp] WebSocket ping timeout after 119996 ms.
+[W 11:13:14.447 LabApp] WebSocket ping timeout after 119985 ms.
+[W 11:13:14.466 LabApp] WebSocket ping timeout after 119995 ms.
+[I 11:13:19.467 LabApp] Starting buffering for ce837763-9391-4c1d-bee1-d8c2984cf905:5d8260f1-c47e-4696-a71b-f399a1a31a14
+slurmstepd: error: *** JOB 10907630 ON gpu1209 CANCELLED AT 2020-03-13T15:18:35 ***
