@@ -26,5 +26,5 @@ end
 for (i, d) in enumerate(dicts)
     f = makesim(d)
     print("Finished $(i)")
-    @tagsave(datadir("port_batched", savename(d, "bson")), f)
+    @tagsave(datadir("port_batched", savename(d, "bson", digits=5)), f; safe = true)
 end
