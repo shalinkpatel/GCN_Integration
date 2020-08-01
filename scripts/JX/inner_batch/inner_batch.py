@@ -103,6 +103,7 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
             local_test_mask = [False if i < x else True for i in range(local_logits.shape[0])]
             train_mask += local_train_mask
             test_mask += local_test_mask
+
             loss = F.cross_entropy(local_logits[:x], local_y[:x])
             loss_test = F.cross_entropy(local_logits[x:], local_y[x:])
 
@@ -121,6 +122,10 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
         loss_test = F.cross_entropy(logits[test_mask], y[test_mask])
         losses_train.append(loss.item())
         losses_test.append(loss_test.item())
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
         model.eval()
         pred = list(map(lambda x: np.argmax(x, axis = 0), torch.exp(F.log_softmax(logits, 1)).cpu().detach().numpy()))
