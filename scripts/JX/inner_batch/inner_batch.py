@@ -45,23 +45,23 @@ class GCN(nn.Module):
 
     def forward(self, g, inputs):
         h = self.encoder(inputs).reshape(-1, 94)
-        h = torch.tanh(h)
+        h = F.leaky_relu(h)
         h = F.dropout(h, training=self.training)
         h = self.conv1(h, g.edge_index)
         h = self.bn1(h)
-        h = torch.tanh(h)
+        h = F.leaky_relu(h)
         h = F.dropout(h, training=self.training)
         h = self.conv2(h, g.edge_index)
         h = self.bn2(h)
-        h = torch.tanh(h)
+        h = F.leaky_relu(h)
         h = F.dropout(h, training=self.training)
         h = self.conv3(h, g.edge_index)
         h = self.bn3(h)
-        h = torch.tanh(h)
+        h = F.leaky_relu(h)
         h = F.dropout(h, training=self.training)
         h = self.conv4(h, g.edge_index)
         h = self.bn4(h)
-        h = torch.tanh(h)
+        h = F.leaky_relu(h)
         h = F.dropout(h, training=self.training)
         h = self.conv5(h, g.edge_index)
         h = self.bn5(h)
@@ -105,7 +105,6 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
             test_mask += local_test_mask
             
             loss = F.cross_entropy(local_logits[:x], local_y[:x])
-            loss_test = F.cross_entropy(local_logits[x:], local_y[x:])
 
             optimizer.zero_grad()
             loss.backward()
