@@ -80,14 +80,14 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
 
     pbar = tqdm(range(epochs))
     for epoch in pbar:
-        model.train()
         logits = []
         y = []
         mask = []
         train_mask = []
         test_mask = []
         for d in data_loader:
-            d = d.to(device)      
+            d = d.to(device)
+            model.train()
 
             local_logits = model(d, d.x.float())
             logits.append(local_logits)
@@ -103,12 +103,12 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
             local_test_mask = [False if i < x else True for i in range(local_logits.shape[0])]
             train_mask += local_train_mask
             test_mask += local_test_mask
-
+            
             loss = F.cross_entropy(local_logits[:x], local_y[:x])
             loss_test = F.cross_entropy(local_logits[x:], local_y[x:])
 
             optimizer.zero_grad()
-            loss.backward(retain_graph=True)
+            loss.backward()
             optimizer.step()
 
         logits = torch.cat(logits, dim=0).to(device)
@@ -122,10 +122,6 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
         loss_test = F.cross_entropy(logits[test_mask], y[test_mask])
         losses_train.append(loss.item())
         losses_test.append(loss_test.item())
-
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
 
         model.eval()
         pred = list(map(lambda x: np.argmax(x, axis = 0), torch.exp(F.log_softmax(logits, 1)).cpu().detach().numpy()))
@@ -176,6 +172,6 @@ def run_sim(cl, batches, layer):
     train_mask = idx[:10000]
     test_mask = idx[10000:]
     
-    net = GCN(94, 800, 750, 400, 50, 2, layer_dict[layer])
+    net = GCN(94, 1000, 750, 400, 50, 2, layer_dict[layer])
     return train_model(net, train_loader, 1500, 0.0005, train_mask, test_mask, mask)
 
