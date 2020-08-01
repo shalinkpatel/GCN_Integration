@@ -83,6 +83,8 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
         logits = []
         y = []
         mask = []
+        train_mask = []
+        test_mask = []
         for d in data_loader:
             d = d.to(device)
             model.train()
@@ -97,6 +99,10 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
             local_y = d.y[local_mask]
 
             x = int(local_logits.shape[0] * 0.8)
+            local_train_mask = [True if i < x else False for i in range(local_logits.shape[0])]
+            local_test_mask = [False if i < x else True for i in range(local_logits.shape[0])]
+            train_mask += local_train_mask
+            test_mask += local_test_mask
             loss = F.cross_entropy(local_logits[:x], local_y[:x])
             loss_test = F.cross_entropy(local_logits[x:], local_y[x:])
 
