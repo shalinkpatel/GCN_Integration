@@ -80,14 +80,14 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
 
     pbar = tqdm(range(epochs))
     for epoch in pbar:
+        model.train()
         logits = []
         y = []
         mask = []
         train_mask = []
         test_mask = []
         for d in data_loader:
-            d = d.to(device)
-            model.train()
+            d = d.to(device)      
 
             local_logits = model(d, d.x.float())
             logits.append(local_logits)
