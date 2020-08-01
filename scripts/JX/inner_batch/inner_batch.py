@@ -108,7 +108,7 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
             loss_test = F.cross_entropy(local_logits[x:], local_y[x:])
 
             optimizer.zero_grad()
-            loss.backward()
+            loss.backward(retain_graph=True)
             optimizer.step()
 
         logits = torch.cat(logits, dim=0).to(device)
