@@ -106,6 +106,7 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
 
         logits = torch.cat(logits, dim=0).to(device)
         y = torch.cat(y, dim=0)
+        mask = torch.cat(mask, dim=0)
         
         logits = logits[mask]
         y = y[mask]
