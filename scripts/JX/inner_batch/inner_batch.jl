@@ -2,7 +2,7 @@ using DrWatson, PyCall
 @quickactivate "GCN_HM_GRN-Integration"
 
 pushfirst!(PyVector(pyimport("sys")."path"), "");
-run_sim = pyimport("large_batch").run_sim
+run_sim = pyimport("inner_batch.py").run_sim
 
 allparams = Dict(
     :layer => ["arma", "sage", "tag"], 
@@ -26,6 +26,6 @@ end
 for (i, d) in enumerate(dicts)
     f = makesim(d)
     print("Finished $(i)")
-    @tagsave(datadir("large_batch", savename(d, "bson")), f; safe = true)
+    @tagsave(datadir("inner_batch", savename(d, "bson")), f; safe = true)
 end
 

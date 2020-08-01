@@ -8,4 +8,4 @@
 #SBATCH --job-name gcn
 
 source ~/ml/bin/activate
-julia large_batch.jl
+julia inner_batch.jl
