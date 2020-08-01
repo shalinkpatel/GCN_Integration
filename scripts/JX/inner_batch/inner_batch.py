@@ -124,7 +124,7 @@ def train_model(net, data_loader, epochs, learning_rate, train_mask, test_mask, 
 
         model.eval()
         pred = list(map(lambda x: np.argmax(x, axis = 0), torch.exp(F.log_softmax(logits, 1)).cpu().detach().numpy()))
-        auc = roc_auc_score(y[test_mask].cpu().numpy(), [pred[i] for i in test_mask], average='weighted')
+        auc = roc_auc_score(y[test_mask].cpu().numpy(), pred[test_mask], average='weighted')
         auc_l.append(auc)
         best_auc = best_auc if best_auc > auc else auc
 
