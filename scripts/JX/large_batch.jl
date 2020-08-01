@@ -2,19 +2,19 @@ using DrWatson, PyCall
 @quickactivate "GCN_HM_GRN-Integration"
 
 pushfirst!(PyVector(pyimport("sys")."path"), "");
-run_sim = pyimport("port_batched").run_sim
+run_sim = pyimport("large_batch").run_sim
 
 allparams = Dict(
     :layer => ["arma", "sage", "tag"], 
-    :lr => [0.0005, 0.0001],
+    :batch => [40, 80],
     :cl => ["E116"]
 )
 
 dicts = dict_list(allparams)
 
 function makesim(d::Dict)
-    @unpack layer, lr, cl = d
-    best_auc, losses_test, losses_train, auc_l = run_sim(cl, lr, layer)
+    @unpack layer, batch, cl = d
+    best_auc, losses_test, losses_train, auc_l = run_sim(cl, batch, layer)
     fulld = copy(d)
     fulld[:auc] = best_auc
     fulld[:losses_test] = losses_test
@@ -26,5 +26,6 @@ end
 for (i, d) in enumerate(dicts)
     f = makesim(d)
     print("Finished $(i)")
-    @tagsave(datadir("port_batched", savename(d, "bson"; digits=5)), f; safe = true)
+    @tagsave(datadir("large_batch", savename(d, "bson")), f; safe = true)
 end
+
