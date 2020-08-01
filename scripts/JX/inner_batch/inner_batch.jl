@@ -2,7 +2,7 @@ using DrWatson, PyCall
 @quickactivate "GCN_HM_GRN-Integration"
 
 pushfirst!(PyVector(pyimport("sys")."path"), "");
-run_sim = pyimport("inner_batch.py").run_sim
+run_sim = pyimport("inner_batch").run_sim
 
 allparams = Dict(
     :layer => ["arma", "sage", "tag"], 
