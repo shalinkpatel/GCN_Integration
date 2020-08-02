@@ -49,7 +49,7 @@ class GCN(nn.Module):
         h = F.dropout(h, training=self.training)
         h = self.conv1(h, g.edge_index)
         h = self.bn1(h)
-        h = F.tanh(h)
+        h = torch.tanh(h)
         h = F.dropout(h, training=self.training)
         h = self.conv2(h, g.edge_index)
         h = self.bn2(h)
