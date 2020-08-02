@@ -173,4 +173,3 @@ def run_sim(cl, batches, layer):
     
     net = GCN(94, 750, 450, 200, 50, 2, layer_dict[layer])
     return train_model(net, train_loader, 1000, 0.0005, train_mask, test_mask, mask)
-
