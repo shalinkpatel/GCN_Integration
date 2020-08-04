@@ -120,9 +120,9 @@ def run_sim(cl, batches, layer):
         'sage': SAGEConv,
         'tag': TAGConv
     }
-    mat = load_npz('/gpfs/data/rsingh47/jbigness/data/%s/hic_sparse_vcsqrt_oe_edge_v7.npz' % cl)
-    hms = np.load('/gpfs/data/rsingh47/jbigness/data/%s/np_hmods_norm_vcsqrt_oe_edge_v7.npy' % cl)
-    labs = np.load('/gpfs/data/rsingh47/jbigness/data/%s/np_nodes_lab_genes_vcsqrt_oe_edge_v7.npy' % cl)
+    mat = load_npz('/gpfs/data/rsingh47/jbigness/data/%s/hic_sparse_vcsqrt_oe_edge_v9.npz' % cl)
+    hms = np.load('/gpfs/data/rsingh47/jbigness/data/%s/np_hmods_norm_vcsqrt_oe_edge_v9.npy' % cl)
+    labs = np.load('/gpfs/data/rsingh47/jbigness/data/%s/np_nodes_lab_genes_vcsqrt_oe_edge_v9.npy' % cl)
     
     print('Data Loaded')
     
@@ -137,7 +137,7 @@ def run_sim(cl, batches, layer):
     extract = torch_geometric.utils.from_scipy_sparse_matrix(mat)
     G = torch_geometric.data.Data(edge_index = extract[0], 
                                   edge_attr = extract[1], 
-                                  x = torch.tensor(hms[:mat.shape[0]]).float().reshape(-1, 1, 100, 5), 
+                                  x = torch.tensor(hms).float().reshape(-1, 1, 100, 5), 
                                   y = y)
     
     cluster_data = ClusterData(G, num_parts=batches, recursive=False,
@@ -153,6 +153,6 @@ def run_sim(cl, batches, layer):
     train_mask = idx[:10000]
     test_mask = idx[10000:]
     
-    net = GCN(94, 1000, 750, 400, 50, 2, layer_dict[layer])
+    net = GCN(94, 800, 500, 400, 50, 2, layer_dict[layer])
     return train_model(net, train_loader, 2000, 0.0005, train_mask, test_mask, mask)
 
