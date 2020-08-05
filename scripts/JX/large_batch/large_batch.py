@@ -140,8 +140,7 @@ def run_sim(cl, batches, layer):
                                   x = torch.tensor(hms).float().reshape(-1, 1, 100, 5), 
                                   y = y)
     
-    cluster_data = ClusterData(G, num_parts=batches, recursive=False,
-                           save_dir='/gpfs_home/spate116/singhlab/GCN_Integration/notebooks/JX')
+    cluster_data = ClusterData(G, num_parts=batches, recursive=False)
     train_loader = ClusterLoader(cluster_data, batch_size=2, shuffle=False,
                              num_workers=0)
     
