@@ -6,7 +6,7 @@ run_sim = pyimport("large_batch").run_sim
 
 allparams = Dict(
     :layer => ["arma", "sage", "tag"], 
-    :batch => [40, 80],
+    :batch => [50, 100],
     :cl => ["E116"]
 )
 
