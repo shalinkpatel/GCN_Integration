@@ -5,7 +5,7 @@ pushfirst!(PyVector(pyimport("sys")."path"), "");
 run_sim = pyimport("inner_batch").run_sim
 
 allparams = Dict(
-    :layer => ["arma", "sage", "tag"], 
+    :layer => ["arma", "tag", "sage"], 
     :batch => [80, 160],
     :cl => ["E116"]
 )
