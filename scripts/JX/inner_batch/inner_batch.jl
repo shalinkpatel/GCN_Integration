@@ -6,7 +6,7 @@ run_sim = pyimport("inner_batch").run_sim
 
 allparams = Dict(
     :layer => ["arma", "tag", "sage"], 
-    :batch => [80],
+    :batch => [40],
     :cl => ["E116"]
 )
 
