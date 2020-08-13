@@ -34,11 +34,14 @@ class GCN(nn.Module):
         self.bn5 = BatchNorm(num_classes)
         x = 10
         self.encoder = nn.Sequential(
-            nn.Conv2d(1, 1, (10, 5)),
+            nn.Conv2d(1, x, (3, 5)),
+            nn.LeakyReLU(),
+            nn.Dropout2d(),
+            nn.Conv2d(x, 1, (3, 1))
         )
 
     def forward(self, g, inputs):
-        h = self.encoder(inputs).reshape(-1, 91)
+        h = self.encoder(inputs).reshape(-1, 96)
         h = torch.tanh(h)
         h = F.dropout(h, training=self.training)
         h = self.conv1(h, g.edge_index)
@@ -164,5 +167,5 @@ def run_sim(cl, batches, layer):
     train_mask = idx[:10000]
     test_mask = idx[10000:]
     
-    net = GCN(91, 750, 500, 250, 50, 2, layer_dict[layer])
+    net = GCN(96, 750, 500, 250, 50, 2, layer_dict[layer])
     return train_model(net, train_loader, 1000, 0.0005, train_mask, test_mask, mask)
