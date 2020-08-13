@@ -4,7 +4,6 @@
 #SBATCH -p gpu --gres=gpu:1
 #SBATCH --time 30:00:00
 #SBATCH --mem-per-cpu 25G
-#SBATCH --constraint=v100
 #SBATCH --job-name inner_batch
 
 source ~/ml/bin/activate
