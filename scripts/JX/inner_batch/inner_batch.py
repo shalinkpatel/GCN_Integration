@@ -164,5 +164,5 @@ def run_sim(cl, batches, layer):
     train_mask = idx[:10000]
     test_mask = idx[10000:]
     
-    net = GCN(94, 750, 500, 250, 50, 2, layer_dict[layer])
+    net = GCN(91, 750, 500, 250, 50, 2, layer_dict[layer])
     return train_model(net, train_loader, 1000, 0.0005, train_mask, test_mask, mask)
