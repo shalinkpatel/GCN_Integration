@@ -32,7 +32,7 @@ class GCN(nn.Module):
         self.bn4 = BatchNorm(hidden_size3)
         self.conv5 = conv(hidden_size3, num_classes)
         self.bn5 = BatchNorm(num_classes)
-        x = 10
+        x = 40
         self.encoder = nn.Sequential(
             nn.Conv2d(1, x, (3, 5)),
             nn.LeakyReLU(),
