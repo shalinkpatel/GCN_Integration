@@ -34,17 +34,11 @@ class GCN(nn.Module):
         self.bn5 = BatchNorm(num_classes)
         x = 10
         self.encoder = nn.Sequential(
-            nn.Conv2d(1, x, (3, 3)),
-            nn.LeakyReLU(),
-            nn.Dropout2d(),
-            nn.Conv2d(x, 2*x, (3, 2)),
-            nn.LeakyReLU(),
-            nn.Dropout2d(),
-            nn.Conv2d(2*x, 1, (3, 2)),
+            nn.Conv2d(1, 1, (10, 5)),
         )
 
     def forward(self, g, inputs):
-        h = self.encoder(inputs).reshape(-1, 94)
+        h = self.encoder(inputs).reshape(-1, 91)
         h = torch.tanh(h)
         h = F.dropout(h, training=self.training)
         h = self.conv1(h, g.edge_index)
