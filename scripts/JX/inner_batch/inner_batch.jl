@@ -26,6 +26,6 @@ end
 for (i, d) in enumerate(dicts)
     f = makesim(d)
     print("Finished $(i)")
-    @tagsave(datadir("inner_batch", savename(d, "bson")), f; safe = true)
+    @tagsave(datadir("inner_batch", savename(d, "bson")), f)
 end
 
