@@ -28,17 +28,15 @@ using Flux
 Turing.setadbackend(:zygote)
 @model graph_mask(y) = begin
     N = get(edge_index."shape", 1)
-    edge_mask = Vector{Int}(undef, N)
-    for i ∈ 1:N
-        edge_mask[i] ~ Bernoulli(0.1)
-    end
+    edge_mask = Vector{Int8}(undef, N)
+    edge_mask ~ filldist(Bernoulli(0.1), N)
     pred = run_model(edge_mask, edge_index, model, node_idx)
     y = y/sum(y)
     y ~ MvNormal(pred/sum(pred), repeat([0.0001], length(y)))
 end
 
-s = sample(graph_mask(run_model(repeat([1], get(edge_index."shape", 1)), edge_index, model, node_idx)), 
-        PG(5), 25000);
+@time s = sample(graph_mask(run_model(repeat([1], get(edge_index."shape", 1)), edge_index, model, node_idx)), 
+        PG(5), 1000)
 
 using DataFrames
 @show DataFrame(describe(s)[1])
@@ -54,7 +52,7 @@ base = run_model(repeat([1], get(edge_index."shape", 1)), edge_index, model, nod
 using GraphRecipes
 using Plots
 using LightGraphs
-theme(:juno)
+theme(:default)
 gr(fmt=:svg)
 
 uni = unique(ei);
@@ -63,16 +61,13 @@ conv_rev = Dict(i => uni[i] for i ∈ 1:length(uni));
 vals = DataFrame(describe(s)[1])[!, 2];
 weigh = Dict((ei[1, i], ei[2, i]) => vals[i] for i ∈ 1:length(vals))
 
-@show "Done 1"
-
 ei_conv = map(x -> conv[x], ei)
 inp = ei_conv
 classes = y."detach"()."cpu"()."numpy"()[unique(map(x -> conv_rev[x], inp))]
 
-@show "Done 2"
-
 g = DiGraph(Edge.(zip(inp[1, :], inp[2, :])))
 
-plot(graphplot(g, names=uni, arrow=true, nodecolor=classes, edgewidth=(s, d, w)-> 
-    2*weigh[(conv_rev[s],conv_rev[d])], fontsize=12))
+plt = plot(graphplot(g, names=uni, arrow=true, nodecolor=classes, edgewidth=(s, d, w)-> 
+    2*weigh[(conv_rev[s],conv_rev[d])], fontsize=10), size=(650, 650))
+display(plt)
 savefig("/gpfs_home/spate116/singhlab/GCN_Integration/notebooks/VI/out.png")
