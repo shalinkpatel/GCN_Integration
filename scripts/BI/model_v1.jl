@@ -71,7 +71,7 @@ function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer
 end
 
 function sample(m::T where T <: BayesianInferenceModel, iters::Integer)
-    return Turing.sample(m.model(m.base_pred), HMC(0.05, 10), iters)
+    return Turing.sample(m.model(m.base_pred), HMC(0.05, 10, :edge_prob), iters)
 end
 
 function final_summary(s::Chains)
