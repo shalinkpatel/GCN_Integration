@@ -57,8 +57,11 @@ function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer
     @model graph_mask(y) = begin
         N = get(edge_index."shape", 1)
         edge_mask = Vector{Int8}(undef, N)
-        edge_mask ~ filldist(Beta(α, β), N)
-        pred = run_model(round.(edge_mask), edge_index, model, node_idx)
+        edge_prob ~ filldist(Beta(α, β), N)
+        for i ∈ 1:N
+            edge_mask[i] ~ Bernoulli(edge_prob[i])
+        end
+        pred = run_model(edge_mask, edge_index, model, node_idx)
         y = y/sum(y)
         y ~ MvNormal(pred/sum(pred), repeat([stdev], length(y)))
     end
@@ -68,7 +71,7 @@ function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer
 end
 
 function sample(m::T where T <: BayesianInferenceModel, iters::Integer)
-    return Turing.sample(m.model(m.base_pred), PG(5), iters)
+    return Turing.sample(m.model(m.base_pred), HMC(0.05, 10), iters)
 end
 
 function final_summary(s::Chains)
