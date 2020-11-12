@@ -1,9 +1,8 @@
 include("model.jl")
 
-model = PyGInferenceModel("/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/cora", 
-                                "cora", 549, 2)
-s = sample(model, 1000)
+model = PyGInferenceModel("/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/path/", 
+                                "path", 3, 2)
+s = sample(model, 15000)
 @show final_summary(s)
-plt = plot_result(model, s, 0, false)
-savefig("GCN_Integration/scripts/BI/cora/explain/node549BI.png")
-display(plt)
+plt = plot_result(model, s, -1, true, false)
+savefig("/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/path/explain/node3BI.png")

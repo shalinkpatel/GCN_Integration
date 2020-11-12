@@ -1,6 +1,6 @@
 using DrWatson
 @quickactivate "GCN_HM_GRN-Integration"
-using Turing, PyCall
+using Turing, PyCall, Zygote
 using DataFrames
 using GraphRecipes
 using Plots
@@ -46,7 +46,7 @@ struct PyGInferenceModel <: BayesianInferenceModel
     y
 end
 
-function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer, p::Float64 = 0.1, stdev::Float64 = 0.0001)
+function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer, p::Float64 = 0.1, stdev::Float64 = 0.001)
     node = convert(Int32, node)
     k = convert(Int32, k)
     train_model, run_model, extract_subgraph = load_pyg(path, file)
@@ -74,12 +74,14 @@ function final_summary(s::Chains)
     return DataFrame(describe(s)[1])
 end
 
-function plot_result(model::T where T <: BayesianInferenceModel, result::Chains, k::Number, dlpy::Bool = true)
+function plot_result(model::T where T <: BayesianInferenceModel, result::Chains, k::Number, dlpy::Bool = true, filter::Bool = true)
     ei = model.ei;
     vals = DataFrame(describe(result)[1])[!, 2];
-    sub_idx = (mean(vals) + k * var(vals)) .< vals;
-    vals = vals[sub_idx]
-    ei = ei[:, sub_idx]
+    if filter
+        sub_idx = (mean(vals) + k * var(vals)) .< vals;
+        vals = vals[sub_idx]
+        ei = ei[:, sub_idx]
+    end
     
     weigh = Dict((ei[1, i], ei[2, i]) => vals[i] for i ∈ 1:length(vals));
     uni = unique(ei);

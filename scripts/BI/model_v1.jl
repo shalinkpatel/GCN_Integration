@@ -11,7 +11,7 @@ using Zygote
 theme(:default)
 gr(fmt=:svg)
 
-Turing.setadbackend(:zygote)
+Turing.setadbackend(:tracker)
 
 Zygote.@adjoint function pycall(f, x...; kw...)
     x = map(py, x)
@@ -58,9 +58,7 @@ function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer
         N = get(edge_index."shape", 1)
         edge_mask = Vector{Int8}(undef, N)
         edge_prob ~ filldist(Beta(α, β), N)
-        for i ∈ 1:N
-            edge_mask[i] ~ Bernoulli(edge_prob[i])
-        end
+        edge_mask .~ Bernoulli.(edge_prob)
         pred = run_model(edge_mask, edge_index, model, node_idx)
         y = y/sum(y)
         y ~ MvNormal(pred/sum(pred), repeat([stdev], length(y)))
@@ -71,7 +69,7 @@ function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer
 end
 
 function sample(m::T where T <: BayesianInferenceModel, iters::Integer)
-    return Turing.sample(m.model(m.base_pred), HMC(0.05, 10, :edge_prob), iters)
+    return Turing.sample(m.model(m.base_pred), HMC(3.5, 5, :edge_prob), iters)
 end
 
 function final_summary(s::Chains)
@@ -80,7 +78,7 @@ end
 
 function plot_result(model::T where T <: BayesianInferenceModel, result::Chains, k::Number, dlpy::Bool = true)
     ei = model.ei;
-    vals = DataFrame(describe(result)[1])[!, 2];
+    vals = DataFrame(describe(result)[1])[size(ei, 2)+1:end, 2];
     sub_idx = (mean(vals) + k * var(vals)) .< vals;
     vals = vals[sub_idx]
     ei = ei[:, sub_idx]
