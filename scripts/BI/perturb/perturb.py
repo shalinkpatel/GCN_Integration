@@ -13,8 +13,8 @@ from math import floor
 import random
 import numpy as np
 
-g = nx.readwrite.gml.read_gml("scripts/BI/perturb/data/syn_graph_4.gml", label=None)
-with open('scripts/BI/perturb/data/syn_graph_labels_4.json', 'r') as f:
+g = nx.readwrite.gml.read_gml("/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/perturb/data/syn_graph_4.gml", label=None)
+with open('/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/perturb/data/syn_graph_labels_4.json', 'r') as f:
     labels = json.load(f) 
 labels = torch.tensor([labels[str(i)] for i in range(1, len(labels.keys()) + 1)])
 x = torch.rand((labels.shape[0], 10), dtype=torch.float32)
@@ -86,4 +86,4 @@ if __name__ == '__main__':
     node_idx = 1
     node_feat_mask, edge_mask = explainer.explain_node(node_idx, x, edge_index)
     ax, G = explainer.visualize_subgraph(node_idx, edge_index, edge_mask, y=data.y)
-    plt.savefig('scripts/BI/perturb/explain/node%d.png' % node_idx, dpi=300)
+    plt.savefig('/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/perturb/explain/node%d.png' % node_idx, dpi=300)

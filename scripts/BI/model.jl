@@ -46,20 +46,19 @@ struct PyGInferenceModel <: BayesianInferenceModel
     y
 end
 
-function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer, p::Float64 = 0.1, stdev::Float64 = 0.001)
+function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer, p::Float32 = 0.1f0, stdev::Float32 = 0.001f0)
     node = convert(Int32, node)
     k = convert(Int32, k)
     train_model, run_model, extract_subgraph = load_pyg(path, file)
     model, x, y, edge_index = train_model();
     edge_index, node_idx = extract_subgraph(node, k, edge_index)
     edge_mask = repeat([1], get(edge_index."shape", 1));
-    @model graph_mask(y) = begin
+    @model function graph_mask(y, ::Type{T} = Float32) where {T}
         N = get(edge_index."shape", 1)
         edge_mask = Vector{Int8}(undef, N)
         edge_mask ~ filldist(Bernoulli(p), N)
-        pred = run_model(edge_mask, edge_index, model, node_idx)
-        y = y/sum(y)
-        y ~ MvNormal(pred/sum(pred), repeat([stdev], length(y)))
+        pred = T.(run_model(edge_mask, edge_index, model, node_idx))
+        y ~ MvNormal(pred/sum(pred), stdev)
     end
     base = run_model(repeat([1], get(edge_index."shape", 1)), edge_index, model, node_idx)
     return PyGInferenceModel(get(edge_index."shape", 1), path, file, node, k, 
@@ -67,15 +66,14 @@ function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer
 end
 
 function sample(m::T where T <: BayesianInferenceModel, iters::Integer)
-    return Turing.sample(m.model(m.base_pred), PG(5), iters)
+    return Turing.sample(m.model(m.base_pred/sum(m.base_pred)), PG(5), iters)
 end
 
 function final_summary(s::Chains)
     return DataFrame(describe(s)[1])
 end
 
-function plot_result(model::T where T <: BayesianInferenceModel, result::Chains, k::Number, dlpy::Bool = true, filter::Bool = true)
-    ei = model.ei;
+function plot_result(ei, y, result::Chains, k::Number, weight::Number = 2, dlpy::Bool = true, filter::Bool = true)
     vals = DataFrame(describe(result)[1])[!, 2];
     if filter
         sub_idx = (mean(vals) + k * var(vals)) .< vals;
@@ -90,14 +88,18 @@ function plot_result(model::T where T <: BayesianInferenceModel, result::Chains,
 
     ei_conv = map(x -> conv[x], ei)
     inp = ei_conv
-    classes = model.y[unique(map(x -> conv_rev[x], inp)) .+ 1]
+    classes = y[unique(map(x -> conv_rev[x], inp)) .+ 1]
 
     g = DiGraph(Edge.(zip(inp[1, :], inp[2, :])))
 
     plt = plot(graphplot(g, names=uni, arrow=true, nodecolor=classes, edgewidth=(s, d, w)-> 
-        2*weigh[(conv_rev[s],conv_rev[d])], fontsize=8), size=(1000, 1000), dpi=300)
+        weight*weigh[(conv_rev[s],conv_rev[d])], fontsize=8), size=(1000, 1000), dpi=300)
     if dlpy
         display(plt)
     end
     return plt
+end
+
+function plot_result(model::T where T <: BayesianInferenceModel, result::Chains, k::Number, weight::Number = 2, dlpy::Bool = true, filter::Bool = true)
+    return plot_result(model.ei, model.y, result, k, dlpy, filter)
 end

@@ -1,8 +1,12 @@
+using Serialization
 include("model.jl")
 
-model = PyGInferenceModel("/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/path/", 
-                                "path", 3, 2)
-s = sample(model, 15000)
+node = 136736
+hops = 0
+model = PyGInferenceModel("/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/hic_gcn/", 
+                                "hic_gcn", node, hops, 0.05f0, 0.00025f0)
+s = sample(model, 2000)
 @show final_summary(s)
-plt = plot_result(model, s, -1, true, false)
-savefig("/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/path/explain/node3BI.png")
+serialize("/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/hic_gcn/explain/samples$(node).jls", [s, model.ei, model.y])
+plt = plot_result(model, s, 1, true, true)
+savefig("/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/hic_gcn/explain/node$(node)BI.png")

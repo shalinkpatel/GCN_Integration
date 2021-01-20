@@ -63,3 +63,11 @@ def run_model(edge_mask, edge_index, model, node_idx):
     edge_index_1 = edge_index[:, torch.tensor(edge_mask).to(device).bool()]
     out = model(x, edge_index_1).detach().cpu()
     return out[node_idx].numpy()
+
+if __name__ == '__main__':
+    model, x, data.y, edge_index = train_model()
+    explainer = GNNExplainer(model, epochs=1000, num_hops=2)
+    node_idx = 10
+    node_feat_mask, edge_mask = explainer.explain_node(node_idx, x, edge_index)
+    ax, G = explainer.visualize_subgraph(node_idx, edge_index, edge_mask, y=data.y)
+    plt.savefig('/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/cora/explain/node%d.png' % node_idx, dpi=300)
