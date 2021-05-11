@@ -1,7 +1,0 @@
-include("model.jl")
-
-model = PyGInferenceModel("/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/", 
-                                "cora", 10, 2)
-s = sample(model, 1000)
-@show final_summary(s)
-plot_result(model, s, false)
