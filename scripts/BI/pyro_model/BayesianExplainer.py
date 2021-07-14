@@ -45,8 +45,10 @@ class BayesianExplainer():
         f = pyro.sample("f", dist.Beta(alpha, beta).to_event(1))
         m = pyro.sample("m", dist.Bernoulli(f).to_event(1))
         mean = self.model(X, self.edge_index_adj[:, m == 1])[self.mapping].reshape(-1)
-        sigma = (self.sharp * torch.eye(mean.size(0))).to(self.device)
-        y_sample = pyro.sample("y", dist.MultivariateNormal(mean, sigma), obs = y)
+        #sigma = (self.sharp * torch.eye(mean.size(0))).to(self.device)
+        #y_sample = pyro.sample("y", dist.MultivariateNormal(mean, sigma), obs = y)
+        y_sample = pyro.sample("y_sample", dist.Categorical(y))
+        y_hat = pyro.sample("y_hat", dist.Categorical(mean), obs=y_sample)
     
     def sample_guide(self, X, y):
         alpha = torch.tensor([2.0 for i in range(self.N)]).to(self.device)
@@ -55,8 +57,11 @@ class BayesianExplainer():
         beta_q = pyro.param("beta_q", beta, constraint=constraints.positive)
         f = pyro.sample("f", dist.Beta(alpha_q, beta_q).to_event(1))
         m = pyro.sample("m", dist.Bernoulli(f).to_event(1))
-        sigma = (self.sharp * torch.eye(X.size(0))).to(self.device)
-        sigma_q = pyro.param("sigma_q", sigma, constraint=constraints.positive)
+        mean = self.model(X, self.edge_index_adj[:, m == 1])[self.mapping].reshape(-1)
+        #sigma = (self.sharp * torch.eye(X.size(0))).to(self.device)
+        #sigma_q = pyro.param("sigma_q", sigma, constraint=constraints.positive)
+        y_sample = pyro.sample("y_sample", dist.Categorical(logits=y))
+        y_hat = pyro.sample("y_hat", dist.Categorical(logits=mean), obs=y_sample)
 
     def ma(self, l, window):
         cumsum, moving_aves = [0], []

@@ -22,7 +22,7 @@ from math import sqrt
 import pyro.distributions.transforms as T
 
 class BayesianExplainer():
-    def __init__(self, model, node_idx: int, k: int, x, edge_index, sharp: float = 0.01, splines: int = 6):
+    def __init__(self, model, node_idx: int, k: int, x, edge_index, sharp: float = 0.01, splines: int = 6, sigmoid = True):
         #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         device = torch.device('cpu')
         self.model = model.to(device)
@@ -45,12 +45,19 @@ class BayesianExplainer():
         for i in range(splines):
             self.splines.append(T.spline(self.N).to(device))
         self.flow_dist = dist.TransformedDistribution(self.base_dist,self.splines)
+
+        self.sigmoid = sigmoid
     
     def sample_model(self, X, y):
-        m = pyro.sample("m", dist.Bernoulli(self.flow_dist.rsample(torch.Size([100,])).sigmoid().mean(dim=0)).to_event(1))
+        if self.sigmoid:
+            m = pyro.sample("m", dist.Bernoulli(self.flow_dist.rsample(torch.Size([250,])).sigmoid().mean(dim=0)).to_event(1))
+        else:
+            m = pyro.sample("m", dist.Bernoulli(self.flow_dist.rsample(torch.Size([250,])).clamp(0, 1).mean(dim=0)).to_event(1))
         mean = self.model(X, self.edge_index_adj[:, m == 1])[self.mapping].reshape(-1)
-        sigma = (self.sharp * torch.eye(mean.size(0))).to(self.device)
-        y_sample = pyro.sample("y", dist.MultivariateNormal(mean, sigma), obs = y)
+        #sigma = (self.sharp * torch.eye(mean.size(0))).to(self.device)
+        #y_sample = pyro.sample("y", dist.MultivariateNormal(mean, sigma), obs = y)
+        y_sample = pyro.sample("y_sample", dist.Categorical(logits=y))
+        y_hat = pyro.sample("y_hat", dist.Categorical(logits=mean), obs=y_sample)
     
     def sample_guide(self, X, y):
         modules = []
@@ -69,7 +76,11 @@ class BayesianExplainer():
         return moving_aves
     
     def L(self, p):
-        return self.flow_dist.rsample(torch.Size([100,])).sigmoid().pow(p).mean()
+        sample = self.flow_dist.rsample(torch.Size([250,]))
+        if self.sigmoid:
+            return sample.sigmoid().pow(p).mean()
+        else:
+            return sample.clamp(0, 1).pow(p).mean()
 
     def train(self, epochs: int = 3000, lr: float = 0.005, lambd: float = 0.1, window: int = 1000, p = 1.25, log: bool = True):
         pyro.get_param_store().clear()
@@ -104,7 +115,11 @@ class BayesianExplainer():
         return avgs
     
     def edge_mask(self):
-        return self.flow_dist.rsample(torch.Size([10000,])).sigmoid().mean(dim=0)
+        sample = self.flow_dist.rsample(torch.Size([10000,]))
+        if self.sigmoid:
+            return sample.sigmoid().mean(dim=0)
+        else:
+            return sample.clamp(0, 1).mean(dim=0)
 
     def visualize_subgraph(self, node_idx, edge_index, edge_mask, y=None,
                            k = 2, threshold=None, **kwargs):

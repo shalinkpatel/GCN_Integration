@@ -16,13 +16,11 @@ from scipy.sparse import coo_matrix,csr_matrix
 import sys
 sys.path.append("..")
 
-from BayesianExplainer import BayesianExplainer
-
-from IPython.display import set_matplotlib_formats
+from BayesianExplainerNF import BayesianExplainer
 
 prefix = '/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/synthetic/'
-G = nx.read_gpickle( prefix + 'data/syn1_G.pickle')
-with open(prefix + 'data/syn1_lab.pickle', 'rb') as f:
+G = nx.read_gpickle( prefix + 'data/syn3_G.pickle')
+with open(prefix + 'data/syn3_lab.pickle', 'rb') as f:
     labels = pickle.load(f)
 
 x = torch.tensor([x[1]['feat'] for x in G.nodes(data=True)])
@@ -68,22 +66,44 @@ for epoch in pbar:
     # Testing step
     model.eval()
     best_loss = loss if loss < best_loss else best_loss
-    #pbar.set_description("Acc -> %.4f" % torch.mean((torch.argmax(log_logits, dim=1) == data.y).float()).item())
+    if epoch % 100 == 0:
+        print("Acc -> %.4f" % torch.mean((torch.argmax(log_logits, dim=1) == data.y).float()).item())
+
 
 import numpy as np
 
-with open('/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/PGExplainer/dataset/syn1.pkl', 'rb') as f:
+with open('/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/PGExplainer/dataset/syn3.pkl', 'rb') as f:
     adj, _, _, _, _, _, _, _, edge_labels = pickle.load(f)
 edge_labels = torch.tensor(edge_labels)
 
+
+from sklearn.metrics import roc_auc_score
+
 auc = 0
-for n in tqdm(range(x.shape[0])):
-    k = 3
-    sharp = 1e-4
-    explainer = BayesianExplainer(model, n, k, x, edge_index, sharp)
-    avgs = explainer.train(epochs=5000, lr=0.05, window=500, log=False)
-    edge_mask = explainer.edge_mask()
-    edges = explainer.edge_index_adj
-    labs = edge_labels[explainer.subset, :][:, explainer.subset][edges[0, :], edges[1, :]]
-    auc += (edge_mask[labs.long() == 1].sum() + (1 - edge_mask[labs.long() == 0]).sum())/edge_mask.shape[0]
-print(auc/x.shape[0])
+auc_gnn_exp = 0
+pbar = range(x.shape[0])
+done = 0
+for n in pbar:
+    try:
+        k = 3
+        sharp = 1e-12
+        splines = 6
+        explainer = BayesianExplainer(model, n, k, x, edge_index, sharp, splines)
+        avgs = explainer.train(epochs=3000, lr=5, lambd=5e-11, window=500, p = 1.1, log=False)
+        edge_mask = explainer.edge_mask()
+        edges = explainer.edge_index_adj
+        labs = edge_labels[explainer.subset, :][:, explainer.subset][edges[0, :], edges[1, :]]
+        sub_idx = (labs.long().cpu().detach().numpy() == 1)
+        itr_auc = roc_auc_score(labs.long().cpu().detach().numpy()[sub_idx], edge_mask.cpu().detach().numpy()[sub_idx])
+        auc += itr_auc
+        e_subset = explainer.edge_mask_hard
+        explainer = GNNExplainer(model.to(device), epochs=1000, log=False)
+        _, edge_mask = explainer.explain_node(n, x.to(device), edge_index.to(device))
+        auc_gnn_exp += roc_auc_score(labs.long().cpu().detach().numpy()[sub_idx], edge_mask[e_subset].cpu().detach().numpy()[sub_idx])
+        done += 1
+        if n % 10 == 0:
+            print('EPOCH: %d | AUC: %.3f | AUC GNN_EXP: %.3f | ITR AUC: %.3f' % (n, auc/done, auc_gnn_exp/done, itr_auc))
+    except:
+        pass
+
+ print('FINAL | AUC: %.3f | AUC GNN_EXP: %.3f | ITR AUC: %.3f' % (auc/done, auc_gnn_exp/done, itr_auc))

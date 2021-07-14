@@ -6,7 +6,7 @@ using GraphRecipes
 using Plots
 using LightGraphs
 using Statistics
-theme(:default)
+theme(:juno)
 gr(fmt=:svg)
 
 Turing.setadbackend(:zygote)
@@ -50,7 +50,7 @@ function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer
     node = convert(Int32, node)
     k = convert(Int32, k)
     train_model, run_model, extract_subgraph = load_pyg(path, file)
-    model, x, y, edge_index = train_model(true);
+    model, x, y, edge_index = train_model(false);
     edge_index, node_idx = extract_subgraph(node, k, edge_index)
     edge_mask = repeat([1], get(edge_index."shape", 1));
     @model function graph_mask(y)
@@ -58,7 +58,8 @@ function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer
         edge_mask = Vector{Int8}(undef, N)
         edge_mask ~ filldist(Bernoulli(p), N)
         pred = run_model(edge_mask, edge_index, model, node_idx)
-        y ~ MvNormal(pred/sum(pred), stdev)
+        y_bar ~ Categorical(exp.(y)./sum(exp.(y)))
+        y_bar ~ Categorical(exp.(pred)./sum(exp.(pred)))
     end
     base = run_model(repeat([1], get(edge_index."shape", 1)), edge_index, model, node_idx)
     return PyGInferenceModel(get(edge_index."shape", 1), path, file, node, k, 
@@ -66,7 +67,7 @@ function PyGInferenceModel(path::String, file::String, node::Integer, k::Integer
 end
 
 function sample(m::T where T <: BayesianInferenceModel, iters::Integer)
-    return Turing.sample(m.model(m.base_pred/sum(m.base_pred)), PG(10), iters)
+    return Turing.sample(m.model(m.base_pred/sum(m.base_pred)), PG(100), iters)
 end
 
 function final_summary(s::Chains)
@@ -93,7 +94,7 @@ function plot_result(ei, y, result::Chains, k::Number, weight::Number = 2, dlpy:
     g = DiGraph(Edge.(zip(inp[1, :], inp[2, :])))
 
     plt = plot(graphplot(g, names=uni, arrow=true, nodecolor=classes, edgewidth=(s, d, w)-> 
-        weight*weigh[(conv_rev[s],conv_rev[d])], fontsize=8), size=(1000, 1000), dpi=300)
+        weight*weigh[(conv_rev[s],conv_rev[d])], fontsize=4), size=(600, 600), dpi=150)
     if dlpy
         display(plt)
     end

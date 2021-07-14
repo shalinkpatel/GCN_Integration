@@ -1,0 +1,13 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 1673424
+##  Job Name : gcn_inference
+##  Nodelist : gpu1204
+##      CPUs : 
+##   Mem/CPU : 20480 MB
+## Directory : /gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/synthetic
+##   Started : Sun Jul  4 17:07:04 EDT 2021
+###############################################################################
+  File "syn.py", line 109
+    print('FINAL | AUC: %.3f | AUC GNN_EXP: %.3f | ITR AUC: %.3f' % (auc/done, auc_gnn_exp/done, itr_auc))
+                                                                                                         ^
+IndentationError: unindent does not match any outer indentation level
