@@ -50,7 +50,7 @@ class BayesianExplainer():
     
     def sample_model(self, X, y):
         if self.sigmoid:
-            m = pyro.sample("m", dist.Bernoulli(self.flow_dist.rsample(torch.Size([250,])).sigmoid().mean(dim=0)).to_event(1))
+            m = pyro.sample("m", dist.Bernoulli(self.flow_dist.rsample(torch.Size([250,])).sigmoid().clamp(0, 1).mean(dim=0)).to_event(1))
         else:
             m = pyro.sample("m", dist.Bernoulli(self.flow_dist.rsample(torch.Size([250,])).clamp(0, 1).mean(dim=0)).to_event(1))
         mean = self.model(X, self.edge_index_adj[:, m == 1])[self.mapping].reshape(-1)
@@ -117,7 +117,7 @@ class BayesianExplainer():
     def edge_mask(self):
         sample = self.flow_dist.rsample(torch.Size([10000,]))
         if self.sigmoid:
-            return sample.sigmoid().mean(dim=0)
+            return sample.sigmoid().clamp(0, 1).mean(dim=0)
         else:
             return sample.clamp(0, 1).mean(dim=0)
 
