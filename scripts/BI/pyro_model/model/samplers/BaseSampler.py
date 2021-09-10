@@ -1,9 +1,8 @@
 from abc import abstractmethod
 
 class BaseSampler():
-    def __init__(self, name: str, **kwargs):
+    def __init__(self, name: str):
         self.name = name
-        self.kwargs = kwargs
 
     @abstractmethod
     def sample_model(self, X, y):
