@@ -1,0 +1,19 @@
+{
+    "explainer": {
+        "dataset": "syn3",
+        "model": "GNN",
+        "explainer" : "BI",
+        "lr" : 2,
+        "epochs" : 10000,
+        "k": 3,
+        "lambd": 1.5e-11,
+        "window": 500,
+        "p": 1.25,
+        "log": false,
+        "sharp": 1e-12,
+        "splines": 12,
+        "eval_enabled" : true,
+        "thres_snip" : 12,
+        "thres_min" : 100
+    }
+}

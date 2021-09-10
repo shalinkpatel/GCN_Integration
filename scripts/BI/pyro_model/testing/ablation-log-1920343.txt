@@ -1,0 +1,84 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 1920343
+##  Job Name : tunnel
+##  Nodelist : gpu1402
+##      CPUs : 
+##   Mem/CPU : 10240 MB
+## Directory : /gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/RE-ParameterizedExplainerForGraphNeuralNetworks
+##   Started : Tue Aug  3 20:35:21 EDT 2021
+###############################################################################
+  0%|          | 0/60 [00:00<?, ?it/s]  2%|▏         | 1/60 [22:48<22:25:56, 1368.76s/it]  3%|▎         | 2/60 [47:02<22:27:50, 1394.32s/it]  5%|▌         | 3/60 [1:11:43<22:29:20, 1420.36s/it]  7%|▋         | 4/60 [1:36:27<22:23:21, 1439.31s/it]  8%|▊         | 5/60 [2:01:13<22:12:20, 1453.46s/it] 10%|█         | 6/60 [2:26:05<21:58:31, 1465.02s/it] 12%|█▏        | 7/60 [2:50:34<21:35:02, 1466.08s/it] 13%|█▎        | 8/60 [3:16:44<21:37:35, 1497.22s/it] 15%|█▌        | 9/60 [3:41:33<21:10:33, 1494.77s/it] 17%|█▋        | 10/60 [4:06:14<20:42:18, 1490.77s/it] 18%|█▊        | 11/60 [4:35:19<21:19:46, 1567.07s/it] 20%|██        | 12/60 [5:01:16<20:51:05, 1563.86s/it] 20%|██        | 12/60 [5:18:13<21:12:53, 1591.12s/it]
+1.0 1.0
+Loading syn3 dataset
+This model obtained: Train Acc: 0.9425, Val Acc: 0.9770, Test Acc: 0.9432.
+Run 0 with seed 0
+Traceback (most recent call last):
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/poutine/trace_messenger.py", line 165, in __call__
+    ret = self.fn(*args, **kwargs)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/poutine/messenger.py", line 12, in _context_wrap
+    return fn(*args, **kwargs)
+  File "/gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/RE-ParameterizedExplainerForGraphNeuralNetworks/ExplanationEvaluation/explainers/BayesianExplainerNF.py", line 67, in sample_model
+    m = pyro.sample("m", dist.Bernoulli(self.flow_dist.rsample(torch.Size([250,])).clamp(0, 1).mean(dim=0)).to_event(1))
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/primitives.py", line 113, in sample
+    apply_stack(msg)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/poutine/runtime.py", line 198, in apply_stack
+    default_process_message(msg)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/poutine/runtime.py", line 159, in default_process_message
+    msg["value"] = msg["fn"](*msg["args"], **msg["kwargs"])
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/distributions/torch_distribution.py", line 45, in __call__
+    return self.rsample(sample_shape) if self.has_rsample else self.sample(sample_shape)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/torch/distributions/independent.py", line 82, in sample
+    return self.base_dist.sample(sample_shape)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/torch/distributions/bernoulli.py", line 89, in sample
+    return torch.bernoulli(self.probs.expand(shape))
+RuntimeError: Expected p_in >= 0 && p_in <= 1 to be true, but got false.  (Could this error message be improved?  If so, please report an enhancement request to PyTorch.)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "experiment_ablation.py", line 64, in <module>
+    (auc, std), _ = replication(config, run_qual=False, results_store=False)
+  File "/gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/RE-ParameterizedExplainerForGraphNeuralNetworks/ExplanationEvaluation/tasks/replication.py", line 198, in replication
+    auc_score, time_score = run_experiment(inference_eval, auc_evaluation, explainer, indices)
+  File "/gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/RE-ParameterizedExplainerForGraphNeuralNetworks/ExplanationEvaluation/tasks/replication.py", line 84, in run_experiment
+    graph, expl = explainer.explain(idx)
+  File "/gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/RE-ParameterizedExplainerForGraphNeuralNetworks/ExplanationEvaluation/explainers/BayesianExplainerNF.py", line 139, in explain
+    self.train()
+  File "/gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/RE-ParameterizedExplainerForGraphNeuralNetworks/ExplanationEvaluation/explainers/BayesianExplainerNF.py", line 113, in train
+    loss = loss_fn(self.sample_model, self.sample_guide, self.x_adj, self.preds[self.mapping[0]])
+  File "/gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/RE-ParameterizedExplainerForGraphNeuralNetworks/ExplanationEvaluation/explainers/BayesianExplainerNF.py", line 103, in <lambda>
+    loss_fn = lambda model, guide, X, y: pyro.infer.Trace_ELBO().differentiable_loss(model, guide, X, y) * self.sharp + self.lambd * self.L(self.p)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/infer/trace_elbo.py", line 109, in differentiable_loss
+    for model_trace, guide_trace in self._get_traces(model, guide, args, kwargs):
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/infer/elbo.py", line 170, in _get_traces
+    yield self._get_trace(model, guide, args, kwargs)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/infer/trace_elbo.py", line 53, in _get_trace
+    "flat", self.max_plate_nesting, model, guide, args, kwargs)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/infer/enum.py", line 48, in get_importance_trace
+    graph_type=graph_type).get_trace(*args, **kwargs)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/poutine/trace_messenger.py", line 187, in get_trace
+    self(*args, **kwargs)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/poutine/trace_messenger.py", line 171, in __call__
+    raise exc from e
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/poutine/trace_messenger.py", line 165, in __call__
+    ret = self.fn(*args, **kwargs)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/poutine/messenger.py", line 12, in _context_wrap
+    return fn(*args, **kwargs)
+  File "/gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/RE-ParameterizedExplainerForGraphNeuralNetworks/ExplanationEvaluation/explainers/BayesianExplainerNF.py", line 67, in sample_model
+    m = pyro.sample("m", dist.Bernoulli(self.flow_dist.rsample(torch.Size([250,])).clamp(0, 1).mean(dim=0)).to_event(1))
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/primitives.py", line 113, in sample
+    apply_stack(msg)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/poutine/runtime.py", line 198, in apply_stack
+    default_process_message(msg)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/poutine/runtime.py", line 159, in default_process_message
+    msg["value"] = msg["fn"](*msg["args"], **msg["kwargs"])
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/pyro/distributions/torch_distribution.py", line 45, in __call__
+    return self.rsample(sample_shape) if self.has_rsample else self.sample(sample_shape)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/torch/distributions/independent.py", line 82, in sample
+    return self.base_dist.sample(sample_shape)
+  File "/gpfs_home/spate116/ml/lib/python3.7/site-packages/torch/distributions/bernoulli.py", line 89, in sample
+    return torch.bernoulli(self.probs.expand(shape))
+RuntimeError: Expected p_in >= 0 && p_in <= 1 to be true, but got false.  (Could this error message be improved?  If so, please report an enhancement request to PyTorch.)
+Trace Shapes:
+ Param Sites:
+Sample Sites:
