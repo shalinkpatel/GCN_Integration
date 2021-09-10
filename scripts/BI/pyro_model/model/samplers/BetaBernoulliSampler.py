@@ -7,4 +7,3 @@ class BetaBernoulliSampler(BaseSampler):
         self.alpha = alpha
         self.beta = beta
         
-
