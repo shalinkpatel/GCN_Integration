@@ -1,28 +1,20 @@
-import torch
-import torch.nn.functional as F
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-import os
-from functools import partial
-import torch
-import numpy as np
-import pandas as pd
-import seaborn as sns
-import pyro
-import pyro.distributions as dist
-from torch_geometric.utils import k_hop_subgraph, to_networkx
-import torch.distributions.constraints as constraints
-from torch_geometric.data import Data
-import networkx as nx
-from pyro.optim import Adam
-from pyro.infer import SVI, Trace_ELBO
-import pyro.poutine as poutine
 from copy import copy
 from math import sqrt
-import typing
+
+import matplotlib.pyplot as plt
+import networkx as nx
+import pyro
+import torch
+from pyro.infer import SVI, Trace_ELBO
+from torch.optim import Adam
+from torch_geometric.data import Data
+from torch_geometric.utils import k_hop_subgraph, to_networkx
+from tqdm import tqdm
+
 from .samplers.BaseSampler import BaseSampler
 
-class BayesExplainer():
+
+class BayesExplainer:
     def __init__(self, model: torch.nn.Module, sampler: BaseSampler, node_idx: int, k: int,
             x: torch.Tensor, edge_index: torch.Tensor, sharp: float):
         device = torch.device('cpu')
@@ -51,7 +43,6 @@ class BayesExplainer():
             cumsum.append(cumsum[i-1] + x)
             if i>=window:
                 moving_ave = (cumsum[i] - cumsum[i-window])/window
-                #can do stuff with moving_ave here
                 moving_aves.append(moving_ave)
         return moving_aves
 
@@ -82,7 +73,7 @@ class BayesExplainer():
         return avgs
     
     def edge_mask(self):
-        return sampler.edge_mask()
+        return self.sampler.edge_mask()
 
     def visualize_subgraph(self, node_idx, edge_index, edge_mask, y=None,
                            k = 2, threshold=None, **kwargs):
