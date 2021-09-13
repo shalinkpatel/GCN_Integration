@@ -32,7 +32,7 @@ class BetaBernoulliSampler(BaseSampler):
         y_sample = pyro.sample("y_sample", dist.Categorical(logits=y))
         _ = pyro.sample("y_hat", dist.Categorical(logits=mean), obs=y_sample)
 
-    def edge_mask(self, _):
+    def edge_mask(self, explainer):
         alpha = pyro.param('alpha_q')
         beta = pyro.param('beta_q')
         return dist.Beta(alpha, beta).mean
