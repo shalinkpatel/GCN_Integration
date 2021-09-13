@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 
-class BaseSampler():
+class BaseSampler:
     def __init__(self, name: str):
         self.name = name
 

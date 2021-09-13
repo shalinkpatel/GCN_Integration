@@ -13,8 +13,8 @@ class BetaBernoulliSampler(BaseSampler):
         self.beta = beta
 
     def sample_model(self, X, y, explainer):
-        alpha = torch.tensor([self.alpha for i in range(explainer.N)]).to(explainer.device)
-        beta = torch.tensor([self.beta for i in range(explainer.N)]).to(explainer.device)
+        alpha = torch.tensor([self.alpha for _ in range(explainer.N)]).to(explainer.device)
+        beta = torch.tensor([self.beta for _ in range(explainer.N)]).to(explainer.device)
         f = pyro.sample("f", dist.Beta(alpha, beta).to_event(1))
         m = pyro.sample("m", dist.Bernoulli(f).to_event(1))
         mean = explainer.model(X, explainer.edge_index_adj[:, m == 1])[explainer.mapping].reshape(-1)
