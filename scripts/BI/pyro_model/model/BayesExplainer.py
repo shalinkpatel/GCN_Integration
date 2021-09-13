@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pyro
 import torch
+from pyro.optim import Adam
 from pyro.infer import SVI, Trace_ELBO
-from torch.optim import Adam
 from torch_geometric.data import Data
 from torch_geometric.utils import k_hop_subgraph, to_networkx
 from tqdm import tqdm
@@ -61,7 +61,7 @@ class BayesExplainer:
             pbar = range(n_steps)
         elbos = []
         for step in pbar:
-            elbo = svi.step(self.x_adj, self.preds[self.mapping[0]])
+            elbo = svi.step(self.x_adj, self.preds[self.mapping[0]], self)
             elbos.append(elbo)
             avgs = self.ma(elbos, window)
             if step >= window:
@@ -73,8 +73,9 @@ class BayesExplainer:
         return avgs
     
     def edge_mask(self):
-        return self.sampler.edge_mask()
+        return self.sampler.edge_mask(self)
 
+    @staticmethod
     def visualize_subgraph(self, node_idx, edge_index, edge_mask, y=None,
                            k = 2, threshold=None, **kwargs):
         # Only operate on a k-hop subgraph around `node_idx`.

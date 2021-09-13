@@ -3,7 +3,7 @@ import torch
 from pyro.distributions import constraints
 import pyro.distributions as dist
 
-from BaseSampler import BaseSampler
+from .BaseSampler import BaseSampler
 
 
 class BetaBernoulliSampler(BaseSampler):

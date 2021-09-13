@@ -1,12 +1,9 @@
 import pyro
 import torch
-import pyro
-import torch
-from pyro.distributions import constraints
 import pyro.distributions as dist
 import pyro.distributions.transforms as T
 
-from BaseSampler import BaseSampler
+from .BaseSampler import BaseSampler
 
 
 class NFSampler(BaseSampler):
@@ -22,10 +19,10 @@ class NFSampler(BaseSampler):
     def sample_model(self, X, y, explainer):
         m_sub = self.flow_dist.rsample(torch.Size([250,]))
         if self.sigmoid:
-            m_sub = m_sub.sigmoid().clamp(0, 1).mean(dim=0).to_event(1)
+            m_sub = m_sub.sigmoid().clamp(0, 1).mean(dim=0)
         else:
-            m_sub = m_sub.clamp(0, 1).mean(dim=0).to_event(1)
-        m = pyro.sample("m", dist.Bernoulli(m_sub))
+            m_sub = m_sub.clamp(0, 1).mean(dim=0)
+        m = pyro.sample("m", dist.Bernoulli(m_sub).to_event(1))
         mean = explainer.model(X, explainer.edge_index_adj[:, m == 1])[explainer.mapping].reshape(-1)
         y_sample = pyro.sample("y_sample", dist.Categorical(logits=y))
         _ = pyro.sample("y_hat", dist.Categorical(logits=mean), obs=y_sample)
