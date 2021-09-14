@@ -1,22 +1,15 @@
-import os.path as osp
 import torch
-from tqdm import tqdm
 import torch.nn.functional as F
-import matplotlib.pyplot as plt
 from torch_geometric.data import Data
 from torch_geometric.nn import GNNExplainer, GCNConv
-from torch_geometric.utils import k_hop_subgraph, from_networkx
 import pickle
 import networkx as nx
-from math import floor
-from tqdm import tqdm
-import seaborn as sns
-from scipy.sparse import coo_matrix,csr_matrix
 
 import sys
 sys.path.append("..")
 
-from BayesianExplainerNF import BayesianExplainer
+from model.BayesExplainer import BayesExplainer
+from model.samplers.NFSampler import NFSampler
 
 prefix = '/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/synthetic/'
 G = nx.read_gpickle( prefix + 'data/syn3_G.pickle')
@@ -86,10 +79,10 @@ done = 0
 for n in pbar:
     try:
         k = 3
-        sharp = 1e-12
-        splines = 6
-        explainer = BayesianExplainer(model, n, k, x, edge_index, sharp, splines)
-        avgs = explainer.train(epochs=3000, lr=5, lambd=5e-11, window=500, p = 1.1, log=False)
+        splines = 8
+        sampler = NFSampler("nf_sampler", len(G.edges), splines, True, 10, 1.5, device)
+        explainer = BayesExplainer(model, sampler, n, k, x, edge_index)
+        avgs = explainer.train(epochs=3000, lr=0.25, window=500, log=False)
         edge_mask = explainer.edge_mask()
         edges = explainer.edge_index_adj
         labs = edge_labels[explainer.subset, :][:, explainer.subset][edges[0, :], edges[1, :]]
