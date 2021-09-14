@@ -6,7 +6,7 @@ import networkx as nx
 import pyro
 import torch
 from pyro.optim import Adam
-from pyro.infer import SVI, Trace_ELBO
+from pyro.infer import SVI
 from torch_geometric.data import Data
 from torch_geometric.utils import k_hop_subgraph, to_networkx
 from tqdm import tqdm
