@@ -16,14 +16,13 @@ from .samplers.BaseSampler import BaseSampler
 
 class BayesExplainer:
     def __init__(self, model: torch.nn.Module, sampler: BaseSampler, node_idx: int, k: int,
-            x: torch.Tensor, edge_index: torch.Tensor, sharp: float):
+            x: torch.Tensor, edge_index: torch.Tensor):
         device = torch.device('cpu')
         self.model = model.to(device)
         self.x = x.to(device)
         self.edge_index = edge_index.to(device)
         self.node_idx = node_idx
         self.k = k
-        self.sharp = sharp
         self.subset, self.edge_index_adj, self.mapping, self.edge_mask_hard = k_hop_subgraph(
             self.node_idx, k, self.edge_index, relabel_nodes=True)
         self.x_adj = self.x[self.subset]
@@ -41,7 +40,7 @@ class BayesExplainer:
 
         for i, x in enumerate(l, 1):
             cumsum.append(cumsum[i-1] + x)
-            if i>=window:
+            if i >= window:
                 moving_ave = (cumsum[i] - cumsum[i-window])/window
                 moving_aves.append(moving_ave)
         return moving_aves
@@ -51,7 +50,7 @@ class BayesExplainer:
         adam_params = {"lr": lr, "betas": (0.95, 0.999)}
         optimizer = Adam(adam_params)
         # setup the inference algorithm
-        svi = SVI(self.sampler.sample_model, self.sampler.sample_guide, optimizer, loss=Trace_ELBO())
+        svi = SVI(self.sampler.sample_model, self.sampler.sample_guide, optimizer, loss=self.sampler.loss_fn)
 
         n_steps = epochs
         # do gradient steps
@@ -76,7 +75,7 @@ class BayesExplainer:
         return self.sampler.edge_mask(self)
 
     @staticmethod
-    def visualize_subgraph(self, node_idx, edge_index, edge_mask, y=None,
+    def visualize_subgraph(node_idx, edge_index, edge_mask, y=None,
                            k = 2, threshold=None, **kwargs):
         # Only operate on a k-hop subgraph around `node_idx`.
         subset, edge_index, _, _ = k_hop_subgraph(

@@ -16,3 +16,7 @@ class BaseSampler:
     @abstractmethod
     def edge_mask(self, explainer):
         pass
+
+    @abstractmethod
+    def loss_fn(self, model, guide, *args, **kwargs):
+        pass

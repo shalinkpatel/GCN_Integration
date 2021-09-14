@@ -36,3 +36,6 @@ class BetaBernoulliSampler(BaseSampler):
         alpha = pyro.param('alpha_q')
         beta = pyro.param('beta_q')
         return dist.Beta(alpha, beta).mean
+
+    def loss_fn(self, model, guide, *args, **kwargs):
+        return pyro.infer.Trace_ELBO().differentiable_loss(model, guide, *args)
