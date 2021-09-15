@@ -96,7 +96,7 @@ for n in pbar:
         done += 1
         if n % 10 == 0:
             print('EPOCH: %d | AUC: %.3f | AUC GNN_EXP: %.3f | ITR AUC: %.3f' % (n, auc/done, auc_gnn_exp/done, itr_auc))
-     except:
-        pass
+    except:
+       pass
 
 print('FINAL | AUC: %.3f | AUC GNN_EXP: %.3f | ITR AUC: %.3f' % (auc/done, auc_gnn_exp/done, itr_auc))
