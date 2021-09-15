@@ -8,4 +8,4 @@
 #SBATCH --output job-log-%J.txt
 
 source ~/ml/bin/activate
-python syn-single.py
+python syn.py
