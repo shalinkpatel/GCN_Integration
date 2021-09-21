@@ -1,5 +1,8 @@
 from abc import abstractmethod
 
+from torch_geometric.nn import MessagePassing
+import torch
+
 
 class BaseSampler:
     def __init__(self, name: str):

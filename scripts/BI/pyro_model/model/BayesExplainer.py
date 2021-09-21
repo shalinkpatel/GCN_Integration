@@ -29,7 +29,7 @@ class BayesExplainer:
         self.device = device
 
         with torch.no_grad():
-            self.preds = model(self.x, self.edge_index_adj)
+            self.preds = model(self.x, self.edge_index_adj).exp()
         
         self.N = self.edge_index_adj.size(1)
 
@@ -50,7 +50,8 @@ class BayesExplainer:
         adam_params = {"lr": lr, "betas": (0.95, 0.999)}
         optimizer = Adam(adam_params)
         # setup the inference algorithm
-        svi = SVI(self.sampler.sample_model, self.sampler.sample_guide, optimizer, loss=self.sampler.loss_fn)
+        svi = SVI(self.sampler.sample_model, self.sampler.sample_guide, optimizer,
+                  loss=self.sampler.loss_fn)
 
         n_steps = epochs
         # do gradient steps

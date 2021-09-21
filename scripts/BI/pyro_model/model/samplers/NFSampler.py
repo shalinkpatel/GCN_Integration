@@ -26,14 +26,23 @@ class NFSampler(BaseSampler):
         else:
             m_sub = m_sub.clamp(0, 1).mean(dim=0)
         m = pyro.sample("m", dist.Bernoulli(m_sub).to_event(1))
-        mean = explainer.model(X, explainer.edge_index_adj[:, m == 1])[explainer.mapping].reshape(-1)
-        y_sample = pyro.sample("y_sample", dist.Categorical(logits=y))
-        y_hat = pyro.sample("y_hat", dist.Categorical(logits=mean), obs=y_sample)
+        mean = explainer.model(X, explainer.edge_index_adj[:, m == 1])[explainer.mapping].reshape(-1).exp()
+        y_sample = pyro.sample("y_sample", dist.Categorical(probs=y))
+        _ = pyro.sample("y_hat", dist.Categorical(probs=mean), obs=y_sample)
 
     def sample_guide(self, X, y, explainer):
         modules = []
         for (i, spline) in enumerate(self.splines):
             modules.append(pyro.module(f"spline{i}", spline))
+        m_sub = self.flow_dist.rsample(torch.Size([250, ]))
+        if self.sigmoid:
+            m_sub = m_sub.sigmoid().clamp(0, 1).mean(dim=0)
+        else:
+            m_sub = m_sub.clamp(0, 1).mean(dim=0)
+        m = pyro.sample("m", dist.Bernoulli(m_sub).to_event(1))
+        mean = explainer.model(X, explainer.edge_index_adj[:, m == 1])[explainer.mapping].reshape(-1).exp()
+        y_sample = pyro.sample("y_sample", dist.Categorical(probs=y))
+        _ = pyro.sample("y_hat", dist.Categorical(probs=mean), obs=y_sample)
 
     def edge_mask(self, explainer):
         sample = self.flow_dist.rsample(torch.Size([10000, ]))
