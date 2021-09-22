@@ -23,3 +23,7 @@ class BaseSampler:
     @abstractmethod
     def loss_fn(self, model, guide, *args, **kwargs):
         pass
+
+    @abstractmethod
+    def run_name(self):
+        pass

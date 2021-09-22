@@ -39,3 +39,6 @@ class BetaBernoulliSampler(BaseSampler):
 
     def loss_fn(self, model, guide, *args, **kwargs):
         return pyro.infer.Trace_ELBO().differentiable_loss(model, guide, *args)
+
+    def run_name(self):
+        return f"{self.name}_alpha-{self.alpha}_beta-{self.beta}"

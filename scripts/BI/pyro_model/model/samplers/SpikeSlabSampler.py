@@ -46,7 +46,19 @@ class SpikeSlabSampler(BaseSampler):
         _ = pyro.sample("y_hat", dist.Categorical(probs=mean), obs=y_sample)
 
     def edge_mask(self, explainer):
-        return pyro.param("t_q")
+        t = pyro.param("t_q")
+        
+        alpha1 = pyro.param("a1_q")
+        beta1 = pyro.param("b1_q")
+        
+        alpha2 = pyro.param("a2_q")
+        beta2 = pyro.param("b2_q")
+        
+        imp = (1 - t) * dist.Beta(alpha1, beta1).mean + t * dist.Beta(alpha2, beta2).mean
+        return imp
 
     def loss_fn(self, model, guide, *args, **kwargs):
         return pyro.infer.Trace_ELBO().differentiable_loss(model, guide, *args)
+
+    def run_name(self):
+        return f"{self.name}_theta_{self.theta}_alpha-{self.alpha1}-{self.alpha2}_beta-{self.beta1}-{self.beta2}"
