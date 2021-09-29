@@ -16,7 +16,7 @@ from samplers.BaseSampler import BaseSampler
 
 
 class Net(torch.nn.Module):
-    def __init__(self, x=64):
+    def __init__(self, y, x=64):
         super(Net, self).__init__()
         self.conv1 = GCNConv(10, x)
         self.conv2 = GCNConv(x, x)
@@ -54,7 +54,7 @@ class Experiment:
         self.data = self.data.to(self.device)
         self.x, self.edge_index = self.data.x, self.data.edge_index
 
-        self.model = Net(x=hidden).to(self.device)
+        self.model = Net(self.y, x=hidden).to(self.device)
 
         path = f"{base}/runs/{experiment}"
         if exists(path):
