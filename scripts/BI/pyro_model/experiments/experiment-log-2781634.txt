@@ -1,0 +1,17 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 2781634
+##  Job Name : gcn_inference
+##  Nodelist : gpu2006
+##      CPUs : 
+##   Mem/CPU : 20480 MB
+## Directory : /gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/experiments
+##   Started : Tue Sep 28 21:56:02 EDT 2021
+###############################################################################
+Traceback (most recent call last):
+  File "synthetic_experiment.py", line 9, in <module>
+    experiment = Experiment("../../", "syn3", "..")
+  File "../model/Experiment.py", line 57, in __init__
+    self.model = Net(x=hidden).to(self.device)
+  File "../model/Experiment.py", line 24, in __init__
+    self.fc = torch.nn.Linear(x, max(y).tolist() + 1)
+NameError: name 'y' is not defined

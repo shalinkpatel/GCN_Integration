@@ -1,11 +1,10 @@
 import sys
+sys.path.append("../model")
 
 from Experiment import Experiment
 from samplers.BetaBernoulliSampler import BetaBernoulliSampler
 from samplers.NFSampler import NFSampler
 from samplers.SpikeSlabSampler import SpikeSlabSampler
-
-sys.path.append("../")
 
 experiment = Experiment("../../", "syn3", "..")
 experiment.train_base_model()
