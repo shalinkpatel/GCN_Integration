@@ -98,9 +98,8 @@ class Experiment:
 
                 edges = node_exp.edge_index_adj
                 labs = self.edge_labels[node_exp.subset, :][:, node_exp.subset][edges[0, :], edges[1, :]]
-                sub_idx = (labs.long().cpu().detach().numpy() == 1)
-                itr_auc = roc_auc_score(labs.long().cpu().detach().numpy()[sub_idx],
-                                        edge_mask.cpu().detach().numpy()[sub_idx])
+                itr_auc = roc_auc_score(labs.long().cpu().detach().numpy(),
+                                        edge_mask.cpu().detach().numpy())
                 auc += itr_auc
                 done += 1
 
