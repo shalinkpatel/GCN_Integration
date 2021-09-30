@@ -13,7 +13,7 @@ import networkx as nx
 
 from BayesExplainer import BayesExplainer
 from samplers.BaseSampler import BaseSampler
-
+import traceback
 
 class Net(torch.nn.Module):
     def __init__(self, y, x=64):
@@ -94,7 +94,7 @@ class Experiment:
                 masks += edge_mask.cpu().detach().numpy().tolist()
 
                 self.writer.add_histogram(f"{name}-edge-mask", edge_mask, n)
-                self.writer.add_histogram(f"{name}-edge-mask-cum", masks, n)
+                self.writer.add_histogram(f"{name}-edge-mask-cum", torch.tensor(masks), n)
 
                 edges = node_exp.edge_index_adj
                 labs = self.edge_labels[node_exp.subset, :][:, node_exp.subset][edges[0, :], edges[1, :]]
@@ -108,6 +108,7 @@ class Experiment:
                 self.writer.add_scalar(f"{name}-avg-auc", auc / done, n)
             except Exception as e:
                 print(f"Encountered an error on node {n} with following error: {e.__str__()}")
+                traceback.print_exc()
 
     @staticmethod
     def experiment_name(hparams: dict) -> str:
