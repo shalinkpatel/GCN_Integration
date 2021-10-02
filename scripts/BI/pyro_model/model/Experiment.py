@@ -14,6 +14,8 @@ import networkx as nx
 from BayesExplainer import BayesExplainer
 from samplers.BaseSampler import BaseSampler
 import traceback
+from datasets.dataset_loaders import load_dataset
+from datasets.ground_truth_loaders import load_dataset_ground_truth
 
 class Net(torch.nn.Module):
     def __init__(self, y, x=64):
@@ -31,30 +33,20 @@ class Net(torch.nn.Module):
 
 
 class Experiment:
-    def __init__(self, prefix: str, experiment: str, base: str, k: int = 3, hidden: int = 64):
-        self.prefix = prefix
+    def __init__(self, experiment: str, base: str, k: int = 3, hidden: int = 64):
         self.experiment = experiment
-        self.G = nx.read_gpickle(prefix + f'pyro_model/synthetic/data/{self.experiment}_G.pickle')
         self.k = k
-        with open(prefix + f'pyro_model/synthetic/data/{self.experiment}_lab.pickle', 'rb') as f:
-            self.labels = pickle.load(f)
-
-        with open(prefix + f'PGExplainer/dataset/{self.experiment}.pkl', 'rb') as f:
-            adj, _, _, _, _, _, _, _, edge_labels = pickle.load(f)
-        self.edge_labels = torch.tensor(edge_labels)
-
-        self.x = torch.tensor([x[1]['feat'] for x in self.G.nodes(data=True)])
-        self.edge_index = torch.tensor([x for x in self.G.edges])
-        self.edge_index_flipped = self.edge_index[:, [1, 0]]
-        self.edge_index = torch.cat((self.edge_index, self.edge_index_flipped))
-        self.y = torch.tensor(self.labels, dtype=torch.long)
-        self.data = Data(x=self.x, edge_index=self.edge_index.T, y=self.y)
+        edge_index, x, y, _, _, _ = load_dataset(experiment, shuffle=False)
+        (_, labels), _ = load_dataset_ground_truth(experiment)
+        
+        self.data = Data(x=torch.tensor(x), edge_index=torch.tensor(edge_index), y=torch.tensor(y))
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.data = self.data.to(self.device)
         self.x, self.edge_index = self.data.x, self.data.edge_index
+        self.labels = labels
 
-        self.model = Net(self.y, x=hidden).to(self.device)
+        self.model = Net(self.data.y, x=hidden).to(self.device)
 
         path = f"{base}/runs/{experiment}"
         if exists(path):
@@ -79,7 +71,7 @@ class Experiment:
             best_loss = loss if loss < best_loss else best_loss
             if epoch % 100 == 0:
                 self.writer.add_scalar("GNN Acc",
-                                       torch.mean((torch.argmax(log_logits, dim=1) == self.data.y).float()).item())
+                                       torch.mean((torch.argmax(log_logits, dim=1) == self.data.y).float()).item(), epoch)
 
     def test_sampler(self, sampler: BaseSampler, name: str, **train_hparams):
         auc = 0
@@ -96,10 +88,8 @@ class Experiment:
                 self.writer.add_histogram(f"{name}-edge-mask", edge_mask, n)
                 self.writer.add_histogram(f"{name}-edge-mask-cum", torch.tensor(masks), n)
 
-                edges = node_exp.edge_index_adj
-                labs = self.edge_labels[node_exp.subset, :][:, node_exp.subset][edges[0, :], edges[1, :]]
-                itr_auc = roc_auc_score(labs.long().cpu().detach().numpy(),
-                                        edge_mask.cpu().detach().numpy())
+                labs = self.labels[node_exp.edge_mask_hard]
+                itr_auc = roc_auc_score(labs, edge_mask.cpu().detach().numpy())
                 auc += itr_auc
                 done += 1
 
@@ -115,12 +105,3 @@ class Experiment:
         for k, v in hparams.items():
             name += f"{k}-{v}||"
         return name[:-2]
-
-
-
-
-
-
-
-
-

@@ -1,12 +1,12 @@
 import sys
 sys.path.append("../model")
 
-from Experiment import Experiment
-from samplers.BetaBernoulliSampler import BetaBernoulliSampler
-from samplers.NFSampler import NFSampler
-from samplers.SpikeSlabSampler import SpikeSlabSampler
+from model.Experiment import Experiment
+from model.samplers.BetaBernoulliSampler import BetaBernoulliSampler
+from model.samplers.NFSampler import NFSampler
+from model.samplers.SpikeSlabSampler import SpikeSlabSampler
 
-experiment = Experiment("../../", "syn3", "..")
+experiment = Experiment("syn3", "..")
 experiment.train_base_model()
 
 print("Trained Base Model")

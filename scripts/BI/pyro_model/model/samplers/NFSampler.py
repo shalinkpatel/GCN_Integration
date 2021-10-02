@@ -27,8 +27,8 @@ class NFSampler(BaseSampler):
             m_sub = m_sub.clamp(0, 1).mean(dim=0)
         m = pyro.sample("m", dist.Bernoulli(m_sub).to_event(1))
         mean = explainer.model(X, explainer.edge_index_adj[:, m == 1])[explainer.mapping].reshape(-1).exp()
-        y_sample = pyro.sample("y_sample", dist.Categorical(probs=y))
-        _ = pyro.sample("y_hat", dist.Categorical(probs=mean), obs=y_sample)
+        y_sample = pyro.sample("y_sample", dist.Categorical(probs=y/y.sum()))
+        _ = pyro.sample("y_hat", dist.Categorical(probs=mean/mean.sum()), obs=y_sample)
 
     def sample_guide(self, X, y, explainer):
         modules = []
