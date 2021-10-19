@@ -1,10 +1,10 @@
 import sys
 sys.path.append("../model")
 
-from model.Experiment import Experiment
-from model.samplers.BetaBernoulliSampler import BetaBernoulliSampler
-from model.samplers.NFSampler import NFSampler
-from model.samplers.SpikeSlabSampler import SpikeSlabSampler
+from Experiment import Experiment
+from samplers.BetaBernoulliSampler import BetaBernoulliSampler
+from samplers.NFSampler import NFSampler
+from samplers.SpikeSlabSampler import SpikeSlabSampler
 
 experiment = Experiment("syn3", "..")
 experiment.train_base_model()
@@ -28,7 +28,7 @@ nf_hparams = {
     "lambd": 5.0,
     "p": 1.5,
 }
-nf_sampler = NFSampler(N=len(experiment.G.edges), device=experiment.device, **nf_hparams)
+nf_sampler = NFSampler(device=experiment.device, **nf_hparams)
 experiment.test_sampler(nf_sampler, Experiment.experiment_name(nf_hparams), epochs=2000, lr=0.5, window=500)
 
 print("Finished NF Sampler")

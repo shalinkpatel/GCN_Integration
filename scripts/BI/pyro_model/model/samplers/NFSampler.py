@@ -7,19 +7,27 @@ from .BaseSampler import BaseSampler
 
 
 class NFSampler(BaseSampler):
-    def __init__(self, name, N: int, splines: int, sigmoid: bool, lambd: float, p: float, device: torch.device):
+    def __init__(self, name, splines: int, sigmoid: bool, lambd: float, p: float, device: torch.device):
         super().__init__(name)
-        self.base_dist = dist.Normal(torch.zeros(N).to(device), torch.ones(N).to(device))
-        self.splines = []
-        for _ in range(splines):
-            self.splines.append(T.spline(N).to(device))
-        self.flow_dist = dist.TransformedDistribution(self.base_dist, self.splines)
         self.sigmoid = sigmoid
+        self.splines_n = splines
+        self.device = device
+
+        self.init = False
 
         self.lambd = lambd
         self.p = p
 
+    def _init_node(self, N):
+        self.base_dist = dist.Normal(torch.zeros(N).to(self.device), torch.ones(N).to(self.device))
+        self.splines = []
+        for _ in range(self.splines_n):
+            self.splines.append(T.spline(N).to(self.device))
+        self.flow_dist = dist.TransformedDistribution(self.base_dist, self.splines)
+
     def sample_model(self, X, y, explainer):
+        if not self.init:
+            self._init_node(explainer.edge_index_adj.shape[1])
         m_sub = self.flow_dist.rsample(torch.Size([250, ]))
         if self.sigmoid:
             m_sub = m_sub.sigmoid().clamp(0, 1).mean(dim=0)
@@ -31,6 +39,8 @@ class NFSampler(BaseSampler):
         _ = pyro.sample("y_hat", dist.Categorical(probs=mean/mean.sum()), obs=y_sample)
 
     def sample_guide(self, X, y, explainer):
+        if not self.init:
+            self._init_node(explainer.edge_index_adj.shape[1])
         modules = []
         for (i, spline) in enumerate(self.splines):
             modules.append(pyro.module(f"spline{i}", spline))
