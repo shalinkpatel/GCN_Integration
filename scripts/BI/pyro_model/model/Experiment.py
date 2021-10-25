@@ -73,11 +73,11 @@ class Experiment:
                 self.writer.add_scalar("GNN Acc",
                                        torch.mean((torch.argmax(log_logits, dim=1) == self.data.y).float()).item(), epoch)
 
-    def test_sampler(self, sampler: BaseSampler, name: str, **train_hparams):
+    def test_sampler(self, sampler: BaseSampler, name: str, predicate=(lambda x: True), **train_hparams):
         auc = 0
         done = 1
         masks = []
-        for n in range(self.x.shape[0]):
+        for n in filter(predicate, range(self.x.shape[0])):
             try:
                 pyro.clear_param_store()
                 node_exp = BayesExplainer(self.model, sampler, n, self.k, self.x, self.data.y, self.edge_index)
@@ -92,6 +92,11 @@ class Experiment:
                 itr_auc = roc_auc_score(labs, edge_mask.cpu().detach().numpy())
                 auc += itr_auc
                 done += 1
+
+                ax, _ = node_exp.visualize_subgraph()
+                self.writer.add_figure("Importance Graph", ax.get_figure(), n)
+                ax, _ = node_exp.visualize_subgraph(edge_mask=labs)
+                self.writer.add_figure("Ground Truth Graph", ax.get_figure(), n)
 
                 self.writer.add_scalar(f"{name}-itr-auc", itr_auc, n)
                 self.writer.add_scalar(f"{name}-avg-auc", auc / done, n)

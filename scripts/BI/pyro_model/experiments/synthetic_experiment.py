@@ -8,6 +8,7 @@ from samplers.SpikeSlabSampler import SpikeSlabSampler
 
 experiment = Experiment("syn3", "..")
 experiment.train_base_model()
+predicate = lambda x: x >= 512
 
 print("Trained Base Model")
 
@@ -17,7 +18,7 @@ bb_hparams = {
     "beta": 10.0
 }
 bb_sampler = BetaBernoulliSampler(**bb_hparams)
-experiment.test_sampler(bb_sampler, Experiment.experiment_name(bb_hparams), epochs=2500, lr=0.05, window=500)
+experiment.test_sampler(bb_sampler, Experiment.experiment_name(bb_hparams), predicate, epochs=2500, lr=0.05, window=500)
 
 print("Finished BetaBernoulli Sampler")
 
@@ -29,7 +30,7 @@ nf_hparams = {
     "p": 1.5,
 }
 nf_sampler = NFSampler(device=experiment.device, **nf_hparams)
-experiment.test_sampler(nf_sampler, Experiment.experiment_name(nf_hparams), epochs=2000, lr=0.5, window=500)
+experiment.test_sampler(nf_sampler, Experiment.experiment_name(nf_hparams), predicate, epochs=2000, lr=0.5, window=500)
 
 print("Finished NF Sampler")
 
@@ -42,7 +43,7 @@ ss_hparams = {
     "beta2": 1.0
 }
 ss_sampler = SpikeSlabSampler(**ss_hparams)
-experiment.test_sampler(ss_sampler, Experiment.experiment_name(ss_hparams), epochs=10000, lr=0.05, window=500)
+experiment.test_sampler(ss_sampler, Experiment.experiment_name(ss_hparams), predicate, epochs=10000, lr=0.05, window=500)
 
 print("Finished SS Sampler")
 
