@@ -6,21 +6,22 @@ from samplers.BetaBernoulliSampler import BetaBernoulliSampler
 from samplers.NFSampler import NFSampler
 from samplers.SpikeSlabSampler import SpikeSlabSampler
 
-experiment = Experiment("syn3", "..")
+experiment = Experiment("syn3-full", "..")
 experiment.train_base_model()
-predicate = lambda x: x >= 512
+predicate = lambda x: True
+label_transform = lambda x, node: x if node < 512 else (1 - x).abs()
 
 print("Trained Base Model")
 
-bb_hparams = {
-    "name": "beta_bernoulli",
-    "alpha": 2.0,
-    "beta": 10.0
-}
-bb_sampler = BetaBernoulliSampler(**bb_hparams)
-experiment.test_sampler(bb_sampler, Experiment.experiment_name(bb_hparams), predicate, epochs=2500, lr=0.05, window=500)
+#bb_hparams = {
+#    "name": "beta_bernoulli",
+#    "alpha": 2.0,
+#    "beta": 10.0
+#}
+#bb_sampler = BetaBernoulliSampler(**bb_hparams)
+#experiment.test_sampler(bb_sampler, Experiment.experiment_name(bb_hparams), predicate, label_transform, epochs=2500, lr=0.05, window=500)
 
-print("Finished BetaBernoulli Sampler")
+#print("Finished BetaBernoulli Sampler")
 
 nf_hparams = {
     "name": "normalizing_flows",
@@ -30,7 +31,7 @@ nf_hparams = {
     "p": 1.5,
 }
 nf_sampler = NFSampler(device=experiment.device, **nf_hparams)
-experiment.test_sampler(nf_sampler, Experiment.experiment_name(nf_hparams), predicate, epochs=2000, lr=0.5, window=500)
+experiment.test_sampler(nf_sampler, Experiment.experiment_name(nf_hparams), predicate, label_transform, epochs=2000, lr=0.5, window=500)
 
 print("Finished NF Sampler")
 
@@ -43,7 +44,7 @@ ss_hparams = {
     "beta2": 1.0
 }
 ss_sampler = SpikeSlabSampler(**ss_hparams)
-experiment.test_sampler(ss_sampler, Experiment.experiment_name(ss_hparams), predicate, epochs=10000, lr=0.05, window=500)
+experiment.test_sampler(ss_sampler, Experiment.experiment_name(ss_hparams), predicate, label_transform, epochs=10000, lr=0.05, window=500)
 
 print("Finished SS Sampler")
 

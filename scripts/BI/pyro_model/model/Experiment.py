@@ -34,10 +34,10 @@ class Net(torch.nn.Module):
 
 class Experiment:
     def __init__(self, experiment: str, base: str, k: int = 3, hidden: int = 64):
-        self.experiment = experiment
+        self.experiment = experiment.split('-')[0]
         self.k = k
-        edge_index, x, y, _, _, _ = load_dataset(experiment, shuffle=False)
-        (_, labels), _ = load_dataset_ground_truth(experiment)
+        edge_index, x, y, _, _, _ = load_dataset(self.experiment, shuffle=False)
+        (_, labels), _ = load_dataset_ground_truth(self.experiment)
         
         self.data = Data(x=torch.tensor(x), edge_index=torch.tensor(edge_index), y=torch.tensor(y))
 
@@ -73,7 +73,7 @@ class Experiment:
                 self.writer.add_scalar("GNN Acc",
                                        torch.mean((torch.argmax(log_logits, dim=1) == self.data.y).float()).item(), epoch)
 
-    def test_sampler(self, sampler: BaseSampler, name: str, predicate=(lambda x: True), **train_hparams):
+    def test_sampler(self, sampler: BaseSampler, name: str, predicate=(lambda x: True), label_transform=(lambda x, node: x), **train_hparams):
         auc = 0
         done = 1
         masks = []
@@ -89,7 +89,8 @@ class Experiment:
                 self.writer.add_histogram(f"{name}-edge-mask-cum", torch.tensor(masks), n)
 
                 labs = self.labels[node_exp.edge_mask_hard]
-                itr_auc = roc_auc_score(labs, edge_mask.cpu().detach().numpy())
+                labs = label_transform(labs, n)
+                itr_auc = roc_auc_score(labs, edge_mask.cpu().detach().numpy(), average="weighted")
                 auc += itr_auc
                 done += 1
 

@@ -181,7 +181,25 @@ class GCN_classification(nn.Module):
             
         self.loss_calc = nn.CrossEntropyLoss()
         self.torch_softmax = nn.Softmax(dim=1)
-        
+
+    def embedding(self, x, edge_index):
+        if self.num_graph_conv_layers == 1:
+            h = self.conv1(x, edge_index)
+            h = torch.relu(h)
+        elif self.num_graph_conv_layers == 2:
+            h = self.conv1(x, edge_index)
+            h = torch.relu(h)
+            h = self.conv2(h, edge_index)
+            h = torch.relu(h)
+        elif self.num_graph_conv_layers == 3:
+            h = self.conv1(x, edge_index)
+            h = torch.relu(h)
+            h = self.conv2(h, edge_index)
+            h = torch.relu(h)
+            h = self.conv3(h, edge_index)
+            h = torch.relu(h)
+
+        return h 
         
     def forward(self, x, edge_index, train_status=False):
         '''

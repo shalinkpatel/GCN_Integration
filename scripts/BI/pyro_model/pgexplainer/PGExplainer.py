@@ -3,6 +3,7 @@ import torch_geometric as ptgeom
 from torch import nn
 from torch.optim import Adam
 from torch_geometric.data import Data
+from torch_geometric.nn import MessagePassing
 from tqdm import tqdm
 
 from BaseExplainer import BaseExplainer
@@ -163,7 +164,9 @@ class PGExplainer(BaseExplainer):
                 sampling_weights = self.explainer_model(input_expl)
                 mask = self._sample_graph(sampling_weights, t, bias=self.sample_bias).squeeze()
 
-                masked_pred = self.model_to_explain(feats, graph, edge_weights=mask)
+                self.__set_masks__(mask, graph)
+                masked_pred = self.model_to_explain(feats, graph)
+                self.__clear_masks__()
                 original_pred = self.model_to_explain(feats, graph)
 
                 if self.type == 'node': # we only care for the prediction of the node
@@ -175,6 +178,26 @@ class PGExplainer(BaseExplainer):
 
             loss.backward()
             optimizer.step()
+
+    def __set_masks__(self, edge_mask, edge_index):
+        self.edge_mask = torch.nn.Parameter(edge_mask)
+        self.edge_mask.requires_grad_(False)
+        self.loop_mask = edge_index[0] != edge_index[1]
+
+        for module in self.model_to_explain.modules():
+            if isinstance(module, MessagePassing):
+                module.__explain__ = True
+                module.__edge_mask__ = self.edge_mask
+                module.__loop_mask__ = self.loop_mask
+
+    def __clear_masks__(self):
+        for module in self.model_to_explain.modules():
+            if isinstance(module, MessagePassing):
+                module.__explain__ = False
+                module.__edge_mask__ = None
+                module.__loop_mask__ = None
+        self.edge_mask = None
+        module.loop_mask = None
 
     def explain(self, index):
         """
