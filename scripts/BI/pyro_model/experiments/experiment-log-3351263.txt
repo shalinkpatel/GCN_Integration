@@ -1,0 +1,10 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3351263
+##  Job Name : gcn_inference
+##  Nodelist : gpu1203
+##      CPUs : 
+##   Mem/CPU : 20480 MB
+## Directory : /gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/experiments
+##   Started : Mon Nov 15 18:14:39 EST 2021
+###############################################################################
+slurmstepd: error: *** JOB 3351263 ON gpu1203 CANCELLED AT 2021-11-15T18:15:53 ***

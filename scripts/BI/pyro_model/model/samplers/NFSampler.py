@@ -71,4 +71,4 @@ class NFSampler(BaseSampler):
         return pyro.infer.Trace_ELBO().differentiable_loss(model, guide, *args) + self.lambd * self.L(self.p)
 
     def run_name(self):
-        return f"{self.name}_splines-{len(self.splines)}_sig-{self.sigmoid}_lambd-{self.lambd}_p-{self.p}"
+        return f"{self.name}_splines-{self.splines_n}_sig-{self.sigmoid}_lambd-{self.lambd}_p-{self.p}"
