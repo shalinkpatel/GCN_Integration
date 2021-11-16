@@ -10,7 +10,7 @@ from samplers.RandomWalkSampler import RandomWalkSampler
 experiment = Experiment("syn3-full", "..")
 experiment.train_base_model()
 predicate = lambda x: True
-label_transform = lambda x, node: x if node < 512 else (1 - x).abs()
+label_transform = lambda x, node: x if node < 511 else (1 - x).abs()
 
 print("Trained Base Model")
 
