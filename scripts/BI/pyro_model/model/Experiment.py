@@ -10,6 +10,7 @@ from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv
 import pickle
 import networkx as nx
+import numpy as np
 
 from BayesExplainer import BayesExplainer
 from samplers.BaseSampler import BaseSampler

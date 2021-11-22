@@ -1,6 +1,8 @@
 import sys
 sys.path.append("/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model")
 
+import numpy as np
+
 from Experiment import Experiment
 from samplers.BetaBernoulliSampler import BetaBernoulliSampler
 from samplers.NFSampler import NFSampler
@@ -10,7 +12,7 @@ from samplers.RandomWalkSampler import RandomWalkSampler
 experiment = Experiment("syn3-full", "..")
 experiment.train_base_model()
 predicate = lambda x: True
-label_transform = lambda x, node: x if node < 511 else (1 - x).abs()
+label_transform = lambda x, node: x if node < 511 else np.abs(1 - x)
 
 print("Trained Base Model")
 
