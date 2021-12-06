@@ -1,4 +1,5 @@
 {
     "editor.fontFamily": "'Cascadia Code',Menlo, Monaco, 'Courier New', monospace",
-    "editor.fontLigatures": true
+    "editor.fontLigatures": true,
+    "julia.environmentPath": "/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/dev/tempering"
 }
