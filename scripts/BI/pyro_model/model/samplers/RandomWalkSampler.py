@@ -29,6 +29,7 @@ class RandomWalkSampler(BaseSampler):
 
         for edge in nx.edges(G, nbunch=list(nodes)):
             possible_set.add((edge[1], edge[0]))
+            possible_set.add((edge[0], edge[1]))
         
         while len(possible_set) != 0:
             consideration = choice(list(possible_set))
@@ -43,6 +44,7 @@ class RandomWalkSampler(BaseSampler):
 
             if include >= 0.99:
                 added_edges.add(consideration)
+                added_edges.add((consideration[1], consideration[0]))
                 nodes.add(consideration[0])
                 nodes.add(consideration[1])
             
@@ -50,6 +52,8 @@ class RandomWalkSampler(BaseSampler):
                 rewrap = (edge[1], edge[0])
                 if rewrap not in added_edges and rewrap not in visited:
                     possible_set.add(rewrap)
+                if edge not in added_edges and edge not in visited:
+                    possible_set.add(edge)
             
         Gprime = nx.from_edgelist(list(added_edges))
         edge_index_mask = from_networkx(Gprime).edge_index
@@ -73,6 +77,7 @@ class RandomWalkSampler(BaseSampler):
 
         for edge in nx.edges(G, nbunch=list(nodes)):
             possible_set.add((edge[1], edge[0]))
+            possible_set.add((edge[0], edge[1]))
         
         while len(possible_set) != 0:
             consideration = choice(list(possible_set))
@@ -87,6 +92,7 @@ class RandomWalkSampler(BaseSampler):
 
             if include.item() > 0.99:
                 added_edges.add(consideration)
+                added_edges.add((consideration[1], consideration[0]))
                 nodes.add(consideration[0])
                 nodes.add(consideration[1])
             
@@ -94,6 +100,8 @@ class RandomWalkSampler(BaseSampler):
                 rewrap = (edge[1], edge[0])
                 if rewrap not in added_edges and rewrap not in visited:
                     possible_set.add(rewrap)
+                if edge not in added_edges and edge not in visited:
+                    possible_set.add(edge)
             
         Gprime = nx.from_edgelist(list(added_edges))
         edge_index_mask = from_networkx(Gprime).edge_index
@@ -115,6 +123,7 @@ class RandomWalkSampler(BaseSampler):
 
             for edge in nx.edges(G, nbunch=list(nodes)):
                 possible_set.add((edge[1], edge[0]))
+                possible_set.add((edge[0], edge[1]))
             
             while len(possible_set) != 0:
                 consideration = choice(list(possible_set))
@@ -129,6 +138,7 @@ class RandomWalkSampler(BaseSampler):
 
                 if include.item() > 0.99:
                     added_edges.add(consideration)
+                    added_edges.add((consideration[1], consideration[0]))
                     edge_mask[idx_edge] += 1
                     nodes.add(consideration[0])
                     nodes.add(consideration[1])
@@ -137,6 +147,8 @@ class RandomWalkSampler(BaseSampler):
                     rewrap = (edge[1], edge[0])
                     if rewrap not in added_edges and rewrap not in visited:
                         possible_set.add(rewrap)
+                    if edge not in added_edges and edge not in visited:
+                        possible_set.add(edge)
         return edge_mask / 1000
 
     def ret_probs(self, explainer):

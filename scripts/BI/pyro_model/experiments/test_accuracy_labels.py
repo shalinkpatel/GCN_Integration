@@ -14,6 +14,8 @@ from tqdm.autonotebook import tqdm
 from Experiment import Experiment
 from BayesExplainer import BayesExplainer
 
+from random import sample
+
 experiment = Experiment("syn3-full", "..")
 experiment.train_base_model()
 
@@ -28,32 +30,33 @@ for i in tqdm(range(experiment.x.shape[0])):
     x_adj = experiment.x[subset]
 
     with torch.no_grad():
-        preds = experiment.model(x_adj, edge_index_adj)[mapping].reshape(-1).exp().softmax(dim=0)
+        preds = experiment.model(x_adj, edge_index_adj)[mapping].reshape(-1).exp().softmax(dim=0).cpu()
     
-    labs = experiment.labels[edge_mask_hard]
+    labs = experiment.labels[edge_mask_hard.cpu()]
     labs = label_transform(labs, i)
     with torch.no_grad():
-        preds_masked = experiment.model(x_adj, edge_index_adj[:, labs == 1])[mapping].reshape(-1).softmax(dim=0)
+        preds_masked = experiment.model(x_adj, edge_index_adj[:, labs == 1])[mapping].reshape(-1).softmax(dim=0).cpu()
 
     entropies.append(binary_cross_entropy(preds, preds_masked).detach().tolist())
     if torch.argmax(preds) != torch.argmax(preds_masked):
         changes += 1
 
-for node_test in [511, 529, 549]:
+for node_test in tqdm(sample(range(550, 800), 50)):
     subset, edge_index_adj, mapping, edge_mask_hard = k_hop_subgraph(
                 node_test, 3, experiment.edge_index, relabel_nodes=True)
     x_adj = experiment.x[subset]
     with torch.no_grad():
-            preds = experiment.model(x_adj, edge_index_adj)[mapping].reshape(-1).exp().softmax(dim=0)
+            preds = experiment.model(x_adj, edge_index_adj)[mapping].reshape(-1).exp().softmax(dim=0).cpu()
 
     combos = torch.combinations(torch.tensor(list(range(edge_index_adj.shape[1]))), r = 6)
 
+    be = None
     best_ent = 1000000000
     best_mask = None
 
-    for i in tqdm(range(combos.shape[0])):
+    for i in range(combos.shape[0]):
         with torch.no_grad():
-            preds_masked = experiment.model(x_adj, edge_index_adj[:, combos[i, :]])[mapping].reshape(-1).softmax(dim=0)
+            preds_masked = experiment.model(x_adj, edge_index_adj[:, combos[i, :]])[mapping].reshape(-1).softmax(dim=0).cpu()
         
         curr_ent = binary_cross_entropy(preds, preds_masked).detach().tolist()
         if curr_ent < best_ent:
@@ -61,12 +64,20 @@ for node_test in [511, 529, 549]:
             best_mask = torch.zeros([edge_index_adj.shape[1]])
             best_mask[combos[i, :]] = 1
 
-    print(f"{node_test} Mask Differential: {(best_mask - experiment.labels[edge_mask_hard]).abs()}")
-    print(f"{node_test} Total Difference: {(best_mask - experiment.labels[edge_mask_hard]).abs().sum()}")
+    torch.save(best_mask, f"tests/{node_test}.pt")
+    print(f"{node_test} Mask Differential: {(best_mask - experiment.labels[edge_mask_hard.cpu()]).abs()}")
+    print(f"{node_test} Total Difference: {(best_mask - experiment.labels[edge_mask_hard.cpu()]).abs().sum()}")
 
     be = BayesExplainer(experiment.model, None, node_test, 3, experiment.x, experiment.data.y, experiment.edge_index)
     be.visualize_subgraph(edge_mask=best_mask)
     plt.savefig(f"tests/{node_test}.png")
+    plt.cla()
+    plt.clf()
+    plt.close('all')
+
+    be = None
+    best_ent = 10000000000
+    best_mask = None
 
 sns.lineplot(x=np.arange(len(entropies)), y=np.array(entropies))
 plt.savefig("tests/entropies.png")
