@@ -1,5 +1,6 @@
 from os.path import exists
 from shutil import rmtree
+from glob import glob
 
 import pyro
 import torch
@@ -8,9 +9,6 @@ from sklearn.metrics import roc_auc_score
 from torch.utils.tensorboard import SummaryWriter
 from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv
-import pickle
-import networkx as nx
-import numpy as np
 
 from BayesExplainer import BayesExplainer
 from samplers.BaseSampler import BaseSampler
@@ -33,9 +31,24 @@ class Net(torch.nn.Module):
         return self.fc(x)
 
 
+class TestSet:
+    def __init__(self, experiment: str):
+        self.experiment = experiment
+        self.files = glob(f"tests/{self.experiment}/*.pt")
+        self.subset = list(map(lambda x: int(x.split("/")[-1].replace(".pt", "")), self.files))
+        self.labels = list(map(lambda x: torch.load(x), self.files))
+
+    def get(self, idx: int) -> torch.Tensor:
+        return self.labels[self.subset.index(idx)]
+
+
 class Experiment:
     def __init__(self, experiment: str, base: str, k: int = 3, hidden: int = 64):
         self.experiment = experiment.split('-')[0]
+        self.using_test_set = False
+        if "verified" in experiment:
+            self.using_test_set = True
+            self.test_set = TestSet(experiment)
         self.k = k
         edge_index, x, y, _, _, _ = load_dataset(self.experiment, shuffle=False)
         (_, labels), _ = load_dataset_ground_truth(self.experiment)
@@ -78,7 +91,11 @@ class Experiment:
         auc = 0
         done = 1
         masks = []
-        for n in filter(predicate, range(self.x.shape[0])):
+        nodes = set(filter(predicate, range(self.x.shape[0])))
+        if self.using_test_set:
+            nodes_test_set = set(self.test_set.subset)
+            nodes = nodes.intersection(nodes_test_set)
+        for n in nodes:
             try:
                 pyro.clear_param_store()
                 node_exp = BayesExplainer(self.model, sampler, n, self.k, self.x, self.data.y, self.edge_index)
@@ -89,7 +106,10 @@ class Experiment:
                 self.writer.add_histogram(f"{name}-edge-mask", edge_mask, n)
                 self.writer.add_histogram(f"{name}-edge-mask-cum", torch.tensor(masks), n)
 
-                labs = self.labels[node_exp.edge_mask_hard]
+                if not self.using_test_set:
+                    labs = self.labels[node_exp.edge_mask_hard]
+                else:
+                    labs = self.test_set.get(n)
                 labs = label_transform(labs, n)
                 itr_auc = roc_auc_score(labs, edge_mask.cpu().detach().numpy(), average="weighted")
                 auc += itr_auc
@@ -105,6 +125,7 @@ class Experiment:
             except Exception as e:
                 print(f"Encountered an error on node {n} with following error: {e.__str__()}")
                 traceback.print_exc()
+            print(f"Analyzed node {n} fully.")
 
     @staticmethod
     def experiment_name(hparams: dict) -> str:
