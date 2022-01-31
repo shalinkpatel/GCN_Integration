@@ -11,10 +11,14 @@ from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv
 
 from BayesExplainer import BayesExplainer
+from DeterministicExplainer import DeterministicExplainer
 from samplers.BaseSampler import BaseSampler
+from searchers.BaseSearcher import BaseSearcher
 import traceback
 from datasets.dataset_loaders import load_dataset
 from datasets.ground_truth_loaders import load_dataset_ground_truth
+
+from multipledispatch import dispatch
 
 class Net(torch.nn.Module):
     def __init__(self, y, x=64):
@@ -35,6 +39,7 @@ class TestSet:
     def __init__(self, experiment: str):
         self.experiment = experiment
         self.files = glob(f"tests/{self.experiment}/*.pt")
+        self.files.sort()
         self.subset = list(map(lambda x: int(x.split("/")[-1].replace(".pt", "")), self.files))
         self.labels = list(map(lambda x: torch.load(x), self.files))
 
@@ -48,7 +53,7 @@ class Experiment:
         self.using_test_set = False
         if "verified" in experiment:
             self.using_test_set = True
-            self.test_set = TestSet(experiment)
+            self.test_set = TestSet(self.experiment)
         self.k = k
         edge_index, x, y, _, _, _ = load_dataset(self.experiment, shuffle=False)
         (_, labels), _ = load_dataset_ground_truth(self.experiment)
@@ -87,27 +92,27 @@ class Experiment:
                 self.writer.add_scalar("GNN Acc",
                                        torch.mean((torch.argmax(log_logits, dim=1) == self.data.y).float()).item(), epoch)
 
-    def test_sampler(self, sampler: BaseSampler, name: str, predicate=(lambda x: True), label_transform=(lambda x, node: x), **train_hparams):
+    def test_sampler(self, sampler, name: str, predicate=(lambda x: True), label_transform=(lambda x, node: x), **train_hparams):
         auc = 0
-        done = 1
+        done = 0
         masks = []
         nodes = set(filter(predicate, range(self.x.shape[0])))
         if self.using_test_set:
             nodes_test_set = set(self.test_set.subset)
             nodes = nodes.intersection(nodes_test_set)
+            nodes = list(nodes)
+            nodes.sort()
         for n in nodes:
             try:
                 pyro.clear_param_store()
-                node_exp = BayesExplainer(self.model, sampler, n, self.k, self.x, self.data.y, self.edge_index)
-                node_exp.train(log=False, **train_hparams)
-                edge_mask = node_exp.edge_mask()
+                edge_mask = self.get_exp(sampler, n, **train_hparams)
                 masks += edge_mask.cpu().detach().numpy().tolist()
 
                 self.writer.add_histogram(f"{name}-edge-mask", edge_mask, n)
                 self.writer.add_histogram(f"{name}-edge-mask-cum", torch.tensor(masks), n)
 
                 if not self.using_test_set:
-                    labs = self.labels[node_exp.edge_mask_hard]
+                    labs = self.labels[self.node_exp.edge_mask_hard]
                 else:
                     labs = self.test_set.get(n)
                 labs = label_transform(labs, n)
@@ -115,9 +120,9 @@ class Experiment:
                 auc += itr_auc
                 done += 1
 
-                ax, _ = node_exp.visualize_subgraph()
+                ax, _ = self.node_exp.visualize_subgraph()
                 self.writer.add_figure("Importance Graph", ax.get_figure(), n)
-                ax, _ = node_exp.visualize_subgraph(edge_mask=labs)
+                ax, _ = self.node_exp.visualize_subgraph(edge_mask=labs)
                 self.writer.add_figure("Ground Truth Graph", ax.get_figure(), n)
 
                 self.writer.add_scalar(f"{name}-itr-auc", itr_auc, n)
@@ -126,6 +131,20 @@ class Experiment:
                 print(f"Encountered an error on node {n} with following error: {e.__str__()}")
                 traceback.print_exc()
             print(f"Analyzed node {n} fully.")
+
+    @dispatch(BaseSampler, int)
+    def get_exp(self, sampler, n, **train_hparams) -> torch.Tensor:
+        node_exp = BayesExplainer(self.model, sampler, n, self.k, self.x, self.data.y, self.edge_index)
+        node_exp.train(log=False, **train_hparams)
+        self.node_exp = node_exp
+        return node_exp.edge_mask()
+    
+    @dispatch(BaseSearcher, int)
+    def get_exp(self, searcher, n, **train_hparams) -> torch.Tensor:
+        node_exp = DeterministicExplainer(self.model, searcher, n, self.k, self.x, self.data.y, self.edge_index)
+        edge_mask = node_exp.edge_mask('.', **train_hparams)
+        self.node_exp = node_exp
+        return edge_mask
 
     @staticmethod
     def experiment_name(hparams: dict) -> str:

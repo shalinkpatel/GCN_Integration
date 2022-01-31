@@ -9,22 +9,12 @@ from samplers.NFSampler import NFSampler
 from samplers.SpikeSlabSampler import SpikeSlabSampler
 from samplers.RandomWalkSampler import RandomWalkSampler
 
-experiment = Experiment("syn3-full", "..")
+experiment = Experiment("syn3-full-verified", "..")
 experiment.train_base_model()
 predicate = lambda x: True
-label_transform = lambda x, node: x if node < 511 else np.abs(1 - x)
+label_transform = lambda x, _: x # lambda x, node: x if node < 511 else np.abs(1 - x)
 
 print("Trained Base Model")
-
-#bb_hparams = {
-#    "name": "beta_bernoulli",
-#    "alpha": 2.0,
-#    "beta": 10.0
-#}
-#bb_sampler = BetaBernoulliSampler(**bb_hparams)
-#experiment.test_sampler(bb_sampler, Experiment.experiment_name(bb_hparams), predicate, label_transform, epochs=2500, lr=0.05, window=500)
-
-#print("Finished BetaBernoulli Sampler")
 
 rw_hparams = {
     "name": "random_walk",

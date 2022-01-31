@@ -1,0 +1,9 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3885478
+##  Job Name : gcn_inference
+##  Nodelist : gpu1204
+##      CPUs : 
+##   Mem/CPU : 20480 MB
+## Directory : /gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/experiments
+##   Started : Mon Jan 31 15:35:53 EST 2022
+###############################################################################
