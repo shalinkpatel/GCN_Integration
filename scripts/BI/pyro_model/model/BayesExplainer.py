@@ -30,6 +30,7 @@ class BayesExplainer:
         self.k = k
         self.subset, self.edge_index_adj, self.mapping, self.edge_mask_hard = k_hop_subgraph(
             self.node_idx, k, self.edge_index, relabel_nodes=True)
+        self.total_mapping = {k: i for k, i in enumerate(self.subset.tolist())}
         self.x_adj = self.x[self.subset]
         self.device = device
 
@@ -115,10 +116,6 @@ class BayesExplainer:
         mapping = {k: i for k, i in enumerate(subset.tolist())}
         G = nx.relabel_nodes(G, mapping)
 
-        rev_mapping = {}
-        for k, v in mapping.items():
-            rev_mapping[v] = k;
-
         node_kwargs = copy(kwargs)
         node_kwargs['node_size'] = kwargs.get('node_size') or 800
         node_kwargs['cmap'] = kwargs.get('cmap') or 'Accent'
@@ -130,12 +127,8 @@ class BayesExplainer:
         ax = plt.gca()
         ax.axis('off')
         for source, target, data in G.edges(data=True):
-            start = self.edge_index_adj[0, :] == rev_mapping[source]
-            end = self.edge_index_adj[1, :] == rev_mapping[target]
-            idx_edge = (start * end).nonzero().item()
-
             ax.annotate(
-                str(idx_edge), xy=pos[target], xycoords='data', xytext=pos[source],
+                '', xy=pos[target], xycoords='data', xytext=pos[source],
                 textcoords='data', arrowprops=dict(
                     arrowstyle="->",
                     alpha=max(data['att'], 0.05),

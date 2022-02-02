@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model")
 
 import numpy as np
@@ -26,12 +27,12 @@ changes = 0
 
 for i in tqdm(range(experiment.x.shape[0])):
     subset, edge_index_adj, mapping, edge_mask_hard = k_hop_subgraph(
-            i, 3, experiment.edge_index, relabel_nodes=True)
+        i, 3, experiment.edge_index, relabel_nodes=True)
     x_adj = experiment.x[subset]
 
     with torch.no_grad():
         preds = experiment.model(x_adj, edge_index_adj)[mapping].reshape(-1).exp().softmax(dim=0).cpu()
-    
+
     labs = experiment.labels[edge_mask_hard.cpu()]
     labs = label_transform(labs, i)
     with torch.no_grad():
@@ -43,12 +44,12 @@ for i in tqdm(range(experiment.x.shape[0])):
 
 for node_test in tqdm(sample(range(550, 800), 50)):
     subset, edge_index_adj, mapping, edge_mask_hard = k_hop_subgraph(
-                node_test, 3, experiment.edge_index, relabel_nodes=True)
+        node_test, 3, experiment.edge_index, relabel_nodes=True)
     x_adj = experiment.x[subset]
     with torch.no_grad():
-            preds = experiment.model(x_adj, edge_index_adj)[mapping].reshape(-1).exp().softmax(dim=0).cpu()
+        preds = experiment.model(x_adj, edge_index_adj)[mapping].reshape(-1).exp().softmax(dim=0).cpu()
 
-    combos = torch.combinations(torch.tensor(list(range(edge_index_adj.shape[1]))), r = 6)
+    combos = torch.combinations(torch.tensor(list(range(edge_index_adj.shape[1]))), r=6)
 
     be = None
     best_ent = 1000000000
@@ -56,8 +57,9 @@ for node_test in tqdm(sample(range(550, 800), 50)):
 
     for i in range(combos.shape[0]):
         with torch.no_grad():
-            preds_masked = experiment.model(x_adj, edge_index_adj[:, combos[i, :]])[mapping].reshape(-1).softmax(dim=0).cpu()
-        
+            preds_masked = experiment.model(x_adj, edge_index_adj[:, combos[i, :]])[mapping].reshape(-1).softmax(
+                dim=0).cpu()
+
         curr_ent = binary_cross_entropy(preds, preds_masked).detach().tolist()
         if curr_ent < best_ent:
             best_ent = curr_ent
@@ -74,10 +76,6 @@ for node_test in tqdm(sample(range(550, 800), 50)):
     plt.cla()
     plt.clf()
     plt.close('all')
-
-    be = None
-    best_ent = 10000000000
-    best_mask = None
 
 sns.lineplot(x=np.arange(len(entropies)), y=np.array(entropies))
 plt.savefig("tests/entropies.png")

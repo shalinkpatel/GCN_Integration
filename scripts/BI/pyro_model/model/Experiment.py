@@ -18,6 +18,8 @@ import traceback
 from datasets.dataset_loaders import load_dataset
 from datasets.ground_truth_loaders import load_dataset_ground_truth
 
+from utils.serialization import with_serializer
+
 from multipledispatch import dispatch
 
 class Net(torch.nn.Module):
@@ -92,6 +94,7 @@ class Experiment:
                 self.writer.add_scalar("GNN Acc",
                                        torch.mean((torch.argmax(log_logits, dim=1) == self.data.y).float()).item(), epoch)
 
+    @with_serializer("test")
     def test_sampler(self, sampler, name: str, predicate=(lambda x: True), label_transform=(lambda x, node: x), **train_hparams):
         auc = 0
         done = 0

@@ -18,10 +18,10 @@ print("Trained Base Model")
 
 rw_hparams = {
     "name": "random_walk",
-    "p": 0.25
+    "p": 0.75
 }
 rw_sampler = RandomWalkSampler(**rw_hparams)
-experiment.test_sampler(rw_sampler, Experiment.experiment_name(rw_hparams), predicate, label_transform, epochs=10000, lr=0.5, window=500)
+experiment.test_sampler(rw_sampler, Experiment.experiment_name(rw_hparams), predicate, label_transform, epochs=10000, lr=0.15, window=500)
 
 print("Finished RW Sampler")
 
