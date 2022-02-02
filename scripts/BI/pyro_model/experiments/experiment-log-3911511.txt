@@ -273,3 +273,8 @@ Analyzed node 788 fully.
 2022-02-02 16:16:30.049 | INFO     | Experiment:test_sampler:159 - name-random_walk.p-0.5 | 511 | avg_auc 0.3068181818181818
 2022-02-02 16:16:30.049 | INFO     | Experiment:test_sampler:160 - name-random_walk.p-0.5 | 511 | itr_acc 0.21428571428571427
 2022-02-02 16:16:30.049 | INFO     | Experiment:test_sampler:161 - name-random_walk.p-0.5 | 511 | avg_acc 0.21428571428571427
+2022-02-02 16:19:21.074 | INFO     | Experiment:test_sampler:158 - name-random_walk.p-0.5 | 529 | itr_auc 0.25
+2022-02-02 16:19:21.082 | INFO     | Experiment:test_sampler:159 - name-random_walk.p-0.5 | 529 | avg_auc 0.27840909090909094
+2022-02-02 16:19:21.083 | INFO     | Experiment:test_sampler:160 - name-random_walk.p-0.5 | 529 | itr_acc 0.2647058823529412
+2022-02-02 16:19:21.083 | INFO     | Experiment:test_sampler:161 - name-random_walk.p-0.5 | 529 | avg_acc 0.2394957983193277
+slurmstepd: error: *** JOB 3911511 ON gpu1204 CANCELLED AT 2022-02-02T16:19:53 ***
