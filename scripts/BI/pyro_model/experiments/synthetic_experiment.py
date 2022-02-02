@@ -5,6 +5,9 @@ from Experiment import Experiment
 from samplers.NFSampler import NFSampler
 from samplers.SpikeSlabSampler import SpikeSlabSampler
 from samplers.RandomWalkSampler import RandomWalkSampler
+from searchers.GNNExplainerSearcher import GNNExplainerSearcher
+
+from loguru import logger
 
 
 experiment = Experiment("syn3-full-verified", "..")
@@ -12,16 +15,25 @@ experiment.train_base_model()
 predicate = lambda x: True
 label_transform = lambda x, _: x # lambda x, node: x if node < 511 else np.abs(1 - x)
 
-print("Trained Base Model")
+logger.info("Trained Base Model")
+
+ge_hparams = {
+    "name": "gnn_explainer",
+    "epochs": 1000
+}
+ge_searcher = GNNExplainerSearcher(**ge_hparams)
+experiment.test_sampler(ge_searcher, Experiment.experiment_name(ge_hparams), predicate, label_transform)
+
+logger.info("Finished GNNExp Searcher")
 
 rw_hparams = {
     "name": "random_walk",
-    "p": 0.25
+    "p": 0.5
 }
 rw_sampler = RandomWalkSampler(**rw_hparams)
 experiment.test_sampler(rw_sampler, Experiment.experiment_name(rw_hparams), predicate, label_transform, epochs=10000, lr=0.15, window=500)
 
-print("Finished RW Sampler")
+logger.info("Finished RW Sampler")
 
 nf_hparams = {
     "name": "normalizing_flows",
@@ -33,7 +45,7 @@ nf_hparams = {
 nf_sampler = NFSampler(device=experiment.device, **nf_hparams)
 experiment.test_sampler(nf_sampler, Experiment.experiment_name(nf_hparams), predicate, label_transform, epochs=2000, lr=0.5, window=500)
 
-print("Finished NF Sampler")
+logger.info("Finished NF Sampler")
 
 ss_hparams = {
     "name": "spike_slab",
@@ -46,4 +58,4 @@ ss_hparams = {
 ss_sampler = SpikeSlabSampler(**ss_hparams)
 experiment.test_sampler(ss_sampler, Experiment.experiment_name(ss_hparams), predicate, label_transform, epochs=10000, lr=0.05, window=500)
 
-print("Finished SS Sampler")
+logger.info("Finished SS Sampler")

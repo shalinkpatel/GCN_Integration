@@ -107,7 +107,6 @@ class RandomWalkSampler(BaseSampler):
 
         mean = explainer.model(X, edge_index_mask)[explainer.mapping].reshape(-1).exp()
         y_sample = pyro.sample("y_sample", dist.Categorical(probs=y/y.sum()))                   # Sample from the true distribution
-        _ = pyro.sample("y_hat", dist.Categorical(probs=mean/mean.sum()), obs=y_sample)         # Sample from mask AND condition on smaple from true distribution
 
     def edge_mask(self, explainer):
         edge_mask = torch.zeros([self.ne])

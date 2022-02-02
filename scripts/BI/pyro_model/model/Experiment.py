@@ -156,9 +156,9 @@ class Experiment:
                 self.writer.add_scalar(f"{name}-avg-acc", acc / done, n)
 
                 logger.info(f"{name.replace('||', '.')} | {n} | itr_auc {itr_auc}")
-                logger.info(f"{name.replace('||', '.')} | {n} | avg_auc {auc / n}")
+                logger.info(f"{name.replace('||', '.')} | {n} | avg_auc {auc / done}")
                 logger.info(f"{name.replace('||', '.')} | {n} | itr_acc {itr_acc}")
-                logger.info(f"{name.replace('||', '.')} | {n} | avg_acc {acc / n}")
+                logger.info(f"{name.replace('||', '.')} | {n} | avg_acc {acc / done}")
             except Exception as e:
                 print(f"Encountered an error on node {n} with following error: {e.__str__()}")
                 traceback.print_exc()
