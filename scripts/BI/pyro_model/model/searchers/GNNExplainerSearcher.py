@@ -11,7 +11,7 @@ class GNNExplainerSearcher(BaseSearcher):
         exp = GNNExplainer(explainer.model, epochs=self.epochs)
         _, edge_mask = exp.explain_node(explainer.node_idx, explainer.x,
                                         explainer.edge_index)
-        return edge_mask
+        return edge_mask[explainer.edge_mask_hard]
 
     def run_name(self):
         return self.name

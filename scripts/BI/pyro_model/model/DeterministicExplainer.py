@@ -40,7 +40,7 @@ class DeterministicExplainer:
     def edge_mask(self, base: str = ".", **train_hparams):
         edge_mask = self.searcher.search(self.x_adj, self.preds[self.mapping[0]], self, **train_hparams)
         self.edge_mask = edge_mask
-        name = self.sampler.run_name()
+        name = self.searcher.run_name()
         path = f"{base}/runs/individual/{name}"
         if exists(path):
             rmtree(path)

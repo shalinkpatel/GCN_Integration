@@ -43,6 +43,7 @@ class Serializer:
         hash = repo.head.object.hexsha
 
         result = dataclasses.asdict(result)
+        result["timestamp"] = result["timestamp"].isoformat()
         result["Git Hash"] = hash
 
         self.db.insert(result)

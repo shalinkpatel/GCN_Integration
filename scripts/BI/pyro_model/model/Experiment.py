@@ -64,7 +64,7 @@ class Experiment:
         
         self.data = Data(x=torch.tensor(x), edge_index=torch.tensor(edge_index), y=torch.tensor(y))
 
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cpu')
         self.data = self.data.to(self.device)
         self.x, self.edge_index = self.data.x, self.data.edge_index
         self.labels = labels
