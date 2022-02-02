@@ -6,7 +6,7 @@ from glob import glob
 import pyro
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, accuracy_score
 from torch.utils.tensorboard import SummaryWriter
 from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv
@@ -137,7 +137,7 @@ class Experiment:
                 itr_auc = roc_auc_score(labs, edge_mask.cpu().detach().numpy(), average="weighted")
                 itr_aucs.append(itr_auc)
 
-                itr_acc = (labs == edge_mask.cpu().detach().numpy()).mean()
+                itr_acc = accuracy_score(labs, edge_mask.detach().cpu().numpy() <= 0.5)
                 itr_accs.append(itr_acc)
                 itr_aucs.append(itr_auc)
 
@@ -155,10 +155,10 @@ class Experiment:
                 self.writer.add_scalar(f"{name}-itr-acc", itr_acc, n)
                 self.writer.add_scalar(f"{name}-avg-acc", acc / done, n)
 
-                logger.info(f"{name} | {n} | itr_auc {itr_auc}")
-                logger.info(f"{name} | {n} | avg_auc {auc}")
-                logger.info(f"{name} | {n} | itr_acc {itr_acc}")
-                logger.info(f"{name} | {n} | avg_acc {acc}")
+                logger.info(f"{name.replace('||', '.')} | {n} | itr_auc {itr_auc}")
+                logger.info(f"{name.replace('||', '.')} | {n} | avg_auc {auc / n}")
+                logger.info(f"{name.replace('||', '.')} | {n} | itr_acc {itr_acc}")
+                logger.info(f"{name.replace('||', '.')} | {n} | avg_acc {acc / n}")
             except Exception as e:
                 print(f"Encountered an error on node {n} with following error: {e.__str__()}")
                 traceback.print_exc()

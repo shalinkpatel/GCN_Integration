@@ -4,29 +4,38 @@
 # In[1]:
 
 
-import os.path as osp
+get_ipython().run_line_magic('load_ext', 'autoreload')
+get_ipython().run_line_magic('autoreload', '2')
+
+import sys
+sys.path.append("/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model")
+
 import torch
 from tqdm import tqdm
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from torch_geometric.data import Data
 from torch_geometric.nn import GNNExplainer, GCNConv
-from torch_geometric.utils import k_hop_subgraph, from_networkx
 import pickle
 import networkx as nx
 from math import floor
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 import seaborn as sns
-from scipy.sparse import coo_matrix,csr_matrix
 
 import sys
 sys.path.append("..")
 
-from BayesianExplainerNF import BayesianExplainer
+from model.BayesExplainer import BayesExplainer
+from model.samplers.NFSampler import NFSampler
+from model.samplers.SpikeSlabSampler import SpikeSlabSampler
+from model.samplers.RandomWalkSampler import RandomWalkSampler
 
-prefix = '/gpfs_home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/synthetic/'
-G = nx.read_gpickle( prefix + 'data/syn3_G.pickle')
-with open(prefix + 'data/syn3_lab.pickle', 'rb') as f:
+from IPython.display import set_matplotlib_formats
+get_ipython().run_line_magic('matplotlib', 'inline')
+set_matplotlib_formats('svg')
+
+G = nx.read_gpickle('data/syn3_G.pickle')
+with open('data/syn3_lab.pickle', 'rb') as f:
     labels = pickle.load(f)
 
 x = torch.tensor([x[1]['feat'] for x in G.nodes(data=True)])
@@ -48,7 +57,8 @@ class Net(torch.nn.Module):
         x = F.leaky_relu(self.conv1(x, edge_index))
         x = F.leaky_relu(self.conv2(x, edge_index))
         x = F.leaky_relu(self.conv3(x, edge_index))
-        return self.fc(x)
+        x = self.fc(x)
+        return F.log_softmax(x, dim=1)
     
 # Load everything onto the gpu if available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -65,7 +75,7 @@ for epoch in pbar:
     model.train()
     optimizer.zero_grad()
     log_logits = model(x, edge_index)
-    loss = F.cross_entropy(log_logits, data.y)
+    loss = F.nll_loss(log_logits, data.y)
     loss.backward()
     optimizer.step()
 
@@ -79,25 +89,85 @@ for epoch in pbar:
 
 
 explainer = GNNExplainer(model, epochs=1000)
-node_idx = 549
+node_idx = 565
+k = 3
 node_feat_mask, edge_mask = explainer.explain_node(node_idx, x, edge_index)
 ax, G = explainer.visualize_subgraph(node_idx, edge_index, edge_mask, y=data.y)
-plt.savefig('sample-gnn-exp.png', dpi=300)
 
-# In[11]:
+
+# In[3]:
 
 
 k = 3
-sharp = 1e-12
-splines = 12
-explainer = BayesianExplainer(model, node_idx, k, x, edge_index, sharp, splines, sigmoid=False)
-avgs = explainer.train(epochs=10000, lr=2, lambd=1.5e-11, window=500, p = 1.25, log=True)
+splines = 8
+sampler = NFSampler("syn3_nf_sampler", splines, True, 5, 1.5, device)
+explainer = BayesExplainer(model, sampler, node_idx, k, x, data.y, edge_index)
+avgs = explainer.train(epochs=2000, lr=0.5, window=500, base="..")
+sns.lineplot(x = range(len(avgs)), y = avgs)
 
 
-# In[12]:
+# In[4]:
 
-plt.figure()
+
 edge_mask = explainer.edge_mask()
-ax, G = explainer.visualize_subgraph(node_idx, edge_index, edge_mask, data.y, k)
-plt.savefig('sample-bayes.png', dpi=300)
+ax, G = explainer.visualize_subgraph()
+plt.show()
+
+
+# In[5]:
+
+
+sns.distplot(explainer.sampler.flow_dist.rsample(torch.Size([10000,])).sigmoid()[:, 7].detach().numpy())
+
+
+# In[6]:
+
+
+sampler = SpikeSlabSampler("syn3_spike_slab", 0.25, 1, 5, 10, 1)
+explainer = BayesExplainer(model, sampler, node_idx, k, x, data.y, edge_index)
+avgs = explainer.train(epochs=10000, lr=0.05, window=500, base="..")
+sns.lineplot(x = range(len(avgs)), y = avgs)
+
+
+# In[7]:
+
+
+edge_mask = explainer.edge_mask()
+ax, G = explainer.visualize_subgraph()
+plt.show()
+
+
+# In[8]:
+
+
+edge_mask
+
+
+# In[19]:
+
+
+sampler = RandomWalkSampler("syn3_random_walk", 0.75)
+explainer = BayesExplainer(model, sampler, node_idx, k, x, data.y, edge_index)
+avgs = explainer.train(epochs=10000, lr=0.15, window=500, base="..")
+sns.lineplot(x = range(len(avgs)), y = avgs)
+
+
+# In[20]:
+
+
+edge_mask = explainer.edge_mask()
+ax, G = explainer.visualize_subgraph()
+plt.show()
+
+
+# In[21]:
+
+
+edge_mask
+
+
+# In[22]:
+
+
+explainer.sampler.ret_probs(explainer)
 
