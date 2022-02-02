@@ -53,7 +53,6 @@ def with_serializer(db: str):
         def wrapper(*args, **kwargs):
             serialzer = Serializer(db)
             result = func(*args, **kwargs)
-            elements = locals()
-            return result
+            serialzer.log_result(*result)
         return wrapper
     return log

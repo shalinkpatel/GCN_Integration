@@ -1,4 +1,5 @@
 from os.path import exists
+from os import makedirs
 from shutil import rmtree
 from glob import glob
 
@@ -17,6 +18,7 @@ from searchers.BaseSearcher import BaseSearcher
 import traceback
 from datasets.dataset_loaders import load_dataset
 from datasets.ground_truth_loaders import load_dataset_ground_truth
+from loguru import logger
 
 from utils.serialization import with_serializer
 
@@ -69,6 +71,8 @@ class Experiment:
 
         self.model = Net(self.data.y, x=hidden).to(self.device)
 
+        self.base = base
+        self.exp_name = experiment
         path = f"{base}/runs/{experiment}"
         if exists(path):
             rmtree(path)
@@ -94,9 +98,20 @@ class Experiment:
                 self.writer.add_scalar("GNN Acc",
                                        torch.mean((torch.argmax(log_logits, dim=1) == self.data.y).float()).item(), epoch)
 
-    @with_serializer("test")
+    @with_serializer("dev")
     def test_sampler(self, sampler, name: str, predicate=(lambda x: True), label_transform=(lambda x, node: x), **train_hparams):
         auc = 0
+        acc = 0
+        itr_aucs = []
+        itr_accs = []
+
+        path = f"{self.base}/logs/{self.experiment}/"
+        if exists(path):
+            rmtree(path)
+        else:
+            makedirs(path)
+        logger.add(path + f"{name.replace('||', '.')}.log")
+
         done = 0
         masks = []
         nodes = set(filter(predicate, range(self.x.shape[0])))
@@ -120,7 +135,14 @@ class Experiment:
                     labs = self.test_set.get(n)
                 labs = label_transform(labs, n)
                 itr_auc = roc_auc_score(labs, edge_mask.cpu().detach().numpy(), average="weighted")
+                itr_aucs.append(itr_auc)
+
+                itr_acc = (labs == edge_mask.cpu().detach().numpy()).mean()
+                itr_accs.append(itr_acc)
+                itr_aucs.append(itr_auc)
+
                 auc += itr_auc
+                acc += itr_acc
                 done += 1
 
                 ax, _ = self.node_exp.visualize_subgraph()
@@ -130,10 +152,19 @@ class Experiment:
 
                 self.writer.add_scalar(f"{name}-itr-auc", itr_auc, n)
                 self.writer.add_scalar(f"{name}-avg-auc", auc / done, n)
+                self.writer.add_scalar(f"{name}-itr-acc", itr_acc, n)
+                self.writer.add_scalar(f"{name}-avg-acc", acc / done, n)
+
+                logger.info(f"{name} | {n} | itr_auc {itr_auc}")
+                logger.info(f"{name} | {n} | avg_auc {auc}")
+                logger.info(f"{name} | {n} | itr_acc {itr_acc}")
+                logger.info(f"{name} | {n} | avg_acc {acc}")
             except Exception as e:
                 print(f"Encountered an error on node {n} with following error: {e.__str__()}")
                 traceback.print_exc()
             print(f"Analyzed node {n} fully.")
+
+        return name, itr_accs, itr_aucs
 
     @dispatch(BaseSampler, int)
     def get_exp(self, sampler, n, **train_hparams) -> torch.Tensor:

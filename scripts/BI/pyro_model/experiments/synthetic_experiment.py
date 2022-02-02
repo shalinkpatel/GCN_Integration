@@ -1,13 +1,11 @@
 import sys
 sys.path.append("/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model")
 
-import numpy as np
-
 from Experiment import Experiment
-from samplers.BetaBernoulliSampler import BetaBernoulliSampler
 from samplers.NFSampler import NFSampler
 from samplers.SpikeSlabSampler import SpikeSlabSampler
 from samplers.RandomWalkSampler import RandomWalkSampler
+
 
 experiment = Experiment("syn3-full-verified", "..")
 experiment.train_base_model()
@@ -18,7 +16,7 @@ print("Trained Base Model")
 
 rw_hparams = {
     "name": "random_walk",
-    "p": 0.75
+    "p": 0.25
 }
 rw_sampler = RandomWalkSampler(**rw_hparams)
 experiment.test_sampler(rw_sampler, Experiment.experiment_name(rw_hparams), predicate, label_transform, epochs=10000, lr=0.15, window=500)
