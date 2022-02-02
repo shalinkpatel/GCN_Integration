@@ -1,5 +1,5 @@
 from torch_geometric.nn import GNNExplainer
-from BaseSearcher import BaseSearcher
+from .BaseSearcher import BaseSearcher
 
 
 class GNNExplainerSearcher(BaseSearcher):

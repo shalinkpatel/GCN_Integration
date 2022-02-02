@@ -1,0 +1,15 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3911301
+##  Job Name : gcn_inference
+##  Nodelist : gpu1402
+##      CPUs : 
+##   Mem/CPU : 20480 MB
+## Directory : /gpfs/home/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/experiments
+##   Started : Wed Feb  2 15:47:02 EST 2022
+###############################################################################
+Traceback (most recent call last):
+  File "synthetic_experiment.py", line 8, in <module>
+    from searchers.GNNExplainerSearcher import GNNExplainerSearcher
+  File "/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/searchers/GNNExplainerSearcher.py", line 2, in <module>
+    from BaseSearcher import BaseSearcher
+ModuleNotFoundError: No module named 'BaseSearcher'
