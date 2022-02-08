@@ -52,7 +52,7 @@ class NFSampler(BaseSampler):
         m = pyro.sample("m", dist.Bernoulli(m_sub).to_event(1))
         mean = explainer.model(X, explainer.edge_index_adj[:, m == 1])[explainer.mapping].reshape(-1).exp()
         y_sample = pyro.sample("y_sample", dist.Categorical(probs=y))
-        _ = pyro.sample("y_hat", dist.Categorical(probs=mean), obs=y_sample)
+        _ = pyro.sample("y_hat", dist.Categorical(probs=mean))
 
     def edge_mask(self, explainer):
         sample = self.flow_dist.rsample(torch.Size([10000, ]))

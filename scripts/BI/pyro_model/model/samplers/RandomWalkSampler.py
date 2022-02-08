@@ -1,3 +1,4 @@
+from re import A
 import pyro
 import torch
 from pyro.distributions import constraints
@@ -5,7 +6,8 @@ import pyro.distributions as dist
 from torch_geometric.utils import to_networkx, from_networkx
 from torch_geometric.data import Data
 import networkx as nx
-from random import choice, sample, random
+from random import choice, random, choices
+import numpy
 
 from .BaseSampler import BaseSampler
 
@@ -18,7 +20,7 @@ class RandomWalkSampler(BaseSampler):
     def sample_model(self, X, y, explainer):
         ne = explainer.edge_index_adj.shape[1]
         self.ne = ne
-        sample_dists = torch.full([ne], self.p)
+        ps = torch.full([ne], self.p)
         G = to_networkx(Data(edge_index=explainer.edge_index_adj, num_nodes=explainer.edge_index_adj.max()))
         nodes = set()
         nodes.add(explainer.mapping.item())
@@ -39,7 +41,7 @@ class RandomWalkSampler(BaseSampler):
             end = explainer.edge_index_adj[1, :] == consideration[1]
             idx_edge = (start * end).nonzero().item()
 
-            include = pyro.sample(f"m_{idx_edge}", dist.Bernoulli(sample_dists[idx_edge]))
+            include = pyro.sample(f"p_{idx_edge}", dist.Bernoulli(ps[idx_edge]))
 
             if include >= 0.99:
                 added_edges.add(consideration)
@@ -58,14 +60,14 @@ class RandomWalkSampler(BaseSampler):
         edge_index_mask = from_networkx(Gprime).edge_index
         
         mean = explainer.model(X, edge_index_mask)[explainer.mapping].reshape(-1).exp()
-        y_sample = pyro.sample("y_sample", dist.Categorical(probs=y))
-        _ = pyro.sample("y_hat", dist.Categorical(probs=mean), obs=y_sample)
+        y_sample = choices(list(range(len(y.detach().cpu().tolist()))), y.detach().cpu().tolist())
+        _ = pyro.sample("y_hat", dist.Categorical(probs=mean), obs=torch.Tensor(y_sample))
 
     def sample_guide(self, X, y, explainer):
         ne = explainer.edge_index_adj.shape[1]
         self.ne = ne
-        sample_dists = torch.full([ne], self.p)
-        sample_dists = list(map(lambda i: pyro.param(f"m_q_{i}", sample_dists[i], constraint=constraints.unit_interval), range(len(sample_dists))))
+        ps = torch.full([ne], self.p)
+        ps = list(map(lambda i: pyro.param(f"p_q_{i}", ps[i], constraint=constraints.unit_interval), range(len(ps))))
 
         G = to_networkx(Data(edge_index=explainer.edge_index_adj, num_nodes=explainer.edge_index_adj.max()))
         nodes = set()
@@ -86,8 +88,7 @@ class RandomWalkSampler(BaseSampler):
             start = explainer.edge_index_adj[0, :] == consideration[0]
             end = explainer.edge_index_adj[1, :] == consideration[1]
             idx_edge = (start * end).nonzero().item()
-
-            include = pyro.sample(f"m_{idx_edge}", dist.Bernoulli(sample_dists[idx_edge]))
+            include = pyro.sample(f"p_{idx_edge}", dist.Bernoulli(ps[idx_edge]))
 
             if include.item() > 0.99:
                 added_edges.add(consideration)
@@ -106,7 +107,7 @@ class RandomWalkSampler(BaseSampler):
         edge_index_mask = from_networkx(Gprime).edge_index
 
         mean = explainer.model(X, edge_index_mask)[explainer.mapping].reshape(-1).exp()
-        y_sample = pyro.sample("y_sample", dist.Categorical(probs=y/y.sum()))                   # Sample from the true distribution
+        y_sample = choices(list(range(len(y.detach().cpu().tolist()))), y.detach().cpu().tolist())
 
     def edge_mask(self, explainer):
         edge_mask = torch.zeros([self.ne])
@@ -131,9 +132,9 @@ class RandomWalkSampler(BaseSampler):
                 end = explainer.edge_index_adj[1, :] == consideration[1]
                 idx_edge = (start * end).nonzero().item()
 
-                include = random() < pyro.param(f"m_q_{idx_edge}")
+                include = random() < pyro.param(f"p_q_{idx_edge}").item()
 
-                if include.item() > 0.99:
+                if include:
                     added_edges.add(consideration)
                     added_edges.add((consideration[1], consideration[0]))
                     edge_mask[idx_edge] += 1
@@ -151,10 +152,10 @@ class RandomWalkSampler(BaseSampler):
     def ret_probs(self, explainer):
         return list(map(lambda i: f"({explainer.total_mapping[explainer.edge_index_adj[0, i].item()]}, "
                                   f"{explainer.total_mapping[explainer.edge_index_adj[1, i].item()]}): "
-                                  f"{pyro.param(f'm_q_{i}')}", range(self.ne)))
+                                  f"{pyro.param(f'p_q_{i}')}", range(self.ne)))
 
     def loss_fn(self, model, guide, *args, **kwargs):
         return pyro.infer.Trace_ELBO().differentiable_loss(model, guide, *args)
 
     def run_name(self):
-        return f"{self.name}_p_{self.p}"
+        return f"{self.name}p-{self.p}"
