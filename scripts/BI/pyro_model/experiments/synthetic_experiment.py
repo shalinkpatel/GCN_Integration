@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model")
 
 from Experiment import Experiment
@@ -6,6 +7,7 @@ from samplers.NFSampler import NFSampler
 from samplers.SpikeSlabSampler import SpikeSlabSampler
 from samplers.RandomWalkSampler import RandomWalkSampler
 from searchers.GNNExplainerSearcher import GNNExplainerSearcher
+from searchers.GreedySearcher import GreedySearcher
 
 from loguru import logger
 
@@ -16,6 +18,15 @@ predicate = lambda x: True
 label_transform = lambda x, _: x # lambda x, node: x if node < 511 else np.abs(1 - x)
 
 logger.info("Trained Base Model")
+
+gs_hparams = {
+    "name": "greedy_searcher",
+    "edges": 6
+}
+gs_searcher = GreedySearcher(**gs_hparams)
+experiment.test_sampler(gs_searcher, Experiment.experiment_name(gs_hparams), predicate, label_transform)
+
+logger.info("Finished Greedy Searcher")
 
 ge_hparams = {
     "name": "gnn_explainer",

@@ -40,9 +40,9 @@ class Net(torch.nn.Module):
 
 
 class TestSet:
-    def __init__(self, experiment: str):
+    def __init__(self, experiment: str, base: str):
         self.experiment = experiment
-        self.files = glob(f"tests/{self.experiment}/*.pt")
+        self.files = glob(f"{base}/experiments/tests/{self.experiment}/*.pt")
         self.files.sort()
         self.subset = list(map(lambda x: int(x.split("/")[-1].replace(".pt", "")), self.files))
         self.labels = list(map(lambda x: torch.load(x), self.files))
@@ -57,7 +57,7 @@ class Experiment:
         self.using_test_set = False
         if "verified" in experiment:
             self.using_test_set = True
-            self.test_set = TestSet(self.experiment)
+            self.test_set = TestSet(self.experiment, base)
         self.k = k
         edge_index, x, y, _, _, _ = load_dataset(self.experiment, shuffle=False)
         (_, labels), _ = load_dataset_ground_truth(self.experiment)
@@ -146,9 +146,9 @@ class Experiment:
                 done += 1
 
                 ax, _ = self.node_exp.visualize_subgraph()
-                self.writer.add_figure("Importance Graph", ax.get_figure(), n)
+                self.writer.add_figure(f"{name}-Importance Graph", ax.get_figure(), n)
                 ax, _ = self.node_exp.visualize_subgraph(edge_mask=labs)
-                self.writer.add_figure("Ground Truth Graph", ax.get_figure(), n)
+                self.writer.add_figure(f"{name}-Ground Truth Graph", ax.get_figure(), n)
 
                 self.writer.add_scalar(f"{name}-itr-auc", itr_auc, n)
                 self.writer.add_scalar(f"{name}-avg-auc", auc / done, n)
@@ -160,8 +160,8 @@ class Experiment:
                 logger.info(f"{name.replace('||', '.')} | {n} | itr_acc {itr_acc}")
                 logger.info(f"{name.replace('||', '.')} | {n} | avg_acc {acc / done}")
             except Exception as e:
-                print(f"Encountered an error on node {n} with following error: {e.__str__()}")
-                traceback.print_exc()
+                logger.error(f"Encountered an error on node {n} with following error: {e.__str__()}")
+                logger.error(traceback.format_exc())
             print(f"Analyzed node {n} fully.")
 
         return name, itr_accs, itr_aucs
