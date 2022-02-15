@@ -30,6 +30,7 @@ class BayesExplainer:
         self.k = k
         self.subset, self.edge_index_adj, self.mapping, self.edge_mask_hard = k_hop_subgraph(
             self.node_idx, k, self.edge_index, relabel_nodes=True)
+        self.total_mapping = {k: i for k, i in enumerate(self.subset.tolist())}
         self.x_adj = self.x[self.subset]
         self.device = device
 
@@ -92,12 +93,13 @@ class BayesExplainer:
     def edge_mask(self):
         return self.sampler.edge_mask(self)
 
-    def visualize_subgraph(self, threshold=None, **kwargs):
+    def visualize_subgraph(self, edge_mask=None, threshold=None, **kwargs):
         # Only operate on a k-hop subgraph around `node_idx`.
         subset, edge_index, _, _ = k_hop_subgraph(
             self.node_idx, self.k, self.edge_index, relabel_nodes=True)
 
-        edge_mask = self.sampler.edge_mask(self)
+        if edge_mask is None:
+            edge_mask = self.sampler.edge_mask(self)
 
         if threshold is not None:
             edge_mask = (edge_mask >= threshold).to(torch.float)

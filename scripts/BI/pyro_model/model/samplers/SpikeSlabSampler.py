@@ -25,7 +25,7 @@ class SpikeSlabSampler(BaseSampler):
         m = pyro.sample("m", dist.Bernoulli((1 - t) * f1 + t * f2).to_event(1))
         mean = explainer.model(X, explainer.edge_index_adj[:, m == 1])[explainer.mapping].reshape(-1).exp()
         y_sample = pyro.sample("y_sample", dist.Categorical(probs=y))
-        _ = pyro.sample("y_hat", dist.Categorical(probs=mean), obs=y_sample)
+        _ = pyro.sample("y_hat", dist.Categorical(probs=mean))
 
     def sample_guide(self, X, y, explainer):
         theta = torch.tensor([self.theta for _ in range(explainer.N)]).to(explainer.device)
@@ -42,8 +42,8 @@ class SpikeSlabSampler(BaseSampler):
 
         m = pyro.sample("m", dist.Bernoulli((1 - t) * f1 + t * f2).to_event(1))
         mean = explainer.model(X, explainer.edge_index_adj[:, m == 1])[explainer.mapping].reshape(-1).exp()
-        y_sample = pyro.sample("y_sample", dist.Categorical(probs=y))
-        _ = pyro.sample("y_hat", dist.Categorical(probs=mean), obs=y_sample)
+        y_sample = pyro.sample("y_sample", dist.Categorical(probs=y/y.sum()))
+        _ = pyro.sample("y_hat", dist.Categorical(probs=mean/mean.sum()))
 
     def edge_mask(self, explainer):
         t = pyro.param("t_q")

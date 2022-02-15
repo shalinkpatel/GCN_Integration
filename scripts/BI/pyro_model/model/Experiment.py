@@ -1,19 +1,28 @@
 from os.path import exists
+from os import makedirs
 from shutil import rmtree
+from glob import glob
 
 import pyro
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, accuracy_score
 from torch.utils.tensorboard import SummaryWriter
 from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv
-import pickle
-import networkx as nx
 
 from BayesExplainer import BayesExplainer
+from DeterministicExplainer import DeterministicExplainer
 from samplers.BaseSampler import BaseSampler
+from searchers.BaseSearcher import BaseSearcher
 import traceback
+from datasets.dataset_loaders import load_dataset
+from datasets.ground_truth_loaders import load_dataset_ground_truth
+from loguru import logger
+
+from utils.serialization import with_serializer
+
+from multipledispatch import dispatch
 
 class Net(torch.nn.Module):
     def __init__(self, y, x=64):
@@ -30,32 +39,40 @@ class Net(torch.nn.Module):
         return self.fc(x)
 
 
-class Experiment:
-    def __init__(self, prefix: str, experiment: str, base: str, k: int = 3, hidden: int = 64):
-        self.prefix = prefix
+class TestSet:
+    def __init__(self, experiment: str, base: str):
         self.experiment = experiment
-        self.G = nx.read_gpickle(prefix + f'pyro_model/synthetic/data/{self.experiment}_G.pickle')
+        self.files = glob(f"{base}/experiments/tests/{self.experiment}/*.pt")
+        self.files.sort()
+        self.subset = list(map(lambda x: int(x.split("/")[-1].replace(".pt", "")), self.files))
+        self.labels = list(map(lambda x: torch.load(x), self.files))
+
+    def get(self, idx: int) -> torch.Tensor:
+        return self.labels[self.subset.index(idx)]
+
+
+class Experiment:
+    def __init__(self, experiment: str, base: str, k: int = 3, hidden: int = 64):
+        self.experiment = experiment.split('-')[0]
+        self.using_test_set = False
+        if "verified" in experiment:
+            self.using_test_set = True
+            self.test_set = TestSet(self.experiment, base)
         self.k = k
-        with open(prefix + f'pyro_model/synthetic/data/{self.experiment}_lab.pickle', 'rb') as f:
-            self.labels = pickle.load(f)
+        edge_index, x, y, _, _, _ = load_dataset(self.experiment, shuffle=False)
+        (_, labels), _ = load_dataset_ground_truth(self.experiment)
+        
+        self.data = Data(x=torch.tensor(x), edge_index=torch.tensor(edge_index), y=torch.tensor(y))
 
-        with open(prefix + f'PGExplainer/dataset/{self.experiment}.pkl', 'rb') as f:
-            adj, _, _, _, _, _, _, _, edge_labels = pickle.load(f)
-        self.edge_labels = torch.tensor(edge_labels)
-
-        self.x = torch.tensor([x[1]['feat'] for x in self.G.nodes(data=True)])
-        self.edge_index = torch.tensor([x for x in self.G.edges])
-        self.edge_index_flipped = self.edge_index[:, [1, 0]]
-        self.edge_index = torch.cat((self.edge_index, self.edge_index_flipped))
-        self.y = torch.tensor(self.labels, dtype=torch.long)
-        self.data = Data(x=self.x, edge_index=self.edge_index.T, y=self.y)
-
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cpu')
         self.data = self.data.to(self.device)
         self.x, self.edge_index = self.data.x, self.data.edge_index
+        self.labels = labels
 
-        self.model = Net(self.y, x=hidden).to(self.device)
+        self.model = Net(self.data.y, x=hidden).to(self.device)
 
+        self.base = base
+        self.exp_name = experiment
         path = f"{base}/runs/{experiment}"
         if exists(path):
             rmtree(path)
@@ -79,35 +96,89 @@ class Experiment:
             best_loss = loss if loss < best_loss else best_loss
             if epoch % 100 == 0:
                 self.writer.add_scalar("GNN Acc",
-                                       torch.mean((torch.argmax(log_logits, dim=1) == self.data.y).float()).item())
+                                       torch.mean((torch.argmax(log_logits, dim=1) == self.data.y).float()).item(), epoch)
 
-    def test_sampler(self, sampler: BaseSampler, name: str, **train_hparams):
+    @with_serializer("dev")
+    def test_sampler(self, sampler, name: str, predicate=(lambda x: True), label_transform=(lambda x, node: x), **train_hparams):
         auc = 0
-        done = 1
+        acc = 0
+        itr_aucs = []
+        itr_accs = []
+
+        path = f"{self.base}/logs/{self.experiment}/"
+        if exists(path):
+            rmtree(path)
+        else:
+            makedirs(path)
+        logger.add(path + f"{name.replace('||', '.')}.log")
+
+        done = 0
         masks = []
-        for n in range(self.x.shape[0]):
+        nodes = set(filter(predicate, range(self.x.shape[0])))
+        if self.using_test_set:
+            nodes_test_set = set(self.test_set.subset)
+            nodes = nodes.intersection(nodes_test_set)
+            nodes = list(nodes)
+            nodes.sort()
+        for n in nodes:
             try:
                 pyro.clear_param_store()
-                node_exp = BayesExplainer(self.model, sampler, n, self.k, self.x, self.data.y, self.edge_index)
-                node_exp.train(log=False, **train_hparams)
-                edge_mask = node_exp.edge_mask()
+                edge_mask = self.get_exp(sampler, n, **train_hparams)
                 masks += edge_mask.cpu().detach().numpy().tolist()
 
                 self.writer.add_histogram(f"{name}-edge-mask", edge_mask, n)
                 self.writer.add_histogram(f"{name}-edge-mask-cum", torch.tensor(masks), n)
 
-                edges = node_exp.edge_index_adj
-                labs = self.edge_labels[node_exp.subset, :][:, node_exp.subset][edges[0, :], edges[1, :]]
-                itr_auc = roc_auc_score(labs.long().cpu().detach().numpy(),
-                                        edge_mask.cpu().detach().numpy())
+                if not self.using_test_set:
+                    labs = self.labels[self.node_exp.edge_mask_hard]
+                else:
+                    labs = self.test_set.get(n)
+                labs = label_transform(labs, n)
+                itr_auc = roc_auc_score(labs, edge_mask.cpu().detach().numpy(), average="weighted")
+                itr_aucs.append(itr_auc)
+
+                itr_acc = accuracy_score(labs, edge_mask.detach().cpu().numpy() <= 0.5)
+                itr_accs.append(itr_acc)
+                itr_aucs.append(itr_auc)
+
                 auc += itr_auc
+                acc += itr_acc
                 done += 1
+
+                ax, _ = self.node_exp.visualize_subgraph()
+                self.writer.add_figure(f"{name}-Importance Graph", ax.get_figure(), n)
+                ax, _ = self.node_exp.visualize_subgraph(edge_mask=labs)
+                self.writer.add_figure(f"{name}-Ground Truth Graph", ax.get_figure(), n)
 
                 self.writer.add_scalar(f"{name}-itr-auc", itr_auc, n)
                 self.writer.add_scalar(f"{name}-avg-auc", auc / done, n)
+                self.writer.add_scalar(f"{name}-itr-acc", itr_acc, n)
+                self.writer.add_scalar(f"{name}-avg-acc", acc / done, n)
+
+                logger.info(f"{name.replace('||', '.')} | {n} | itr_auc {itr_auc}")
+                logger.info(f"{name.replace('||', '.')} | {n} | avg_auc {auc / done}")
+                logger.info(f"{name.replace('||', '.')} | {n} | itr_acc {itr_acc}")
+                logger.info(f"{name.replace('||', '.')} | {n} | avg_acc {acc / done}")
             except Exception as e:
-                print(f"Encountered an error on node {n} with following error: {e.__str__()}")
-                traceback.print_exc()
+                logger.error(f"Encountered an error on node {n} with following error: {e.__str__()}")
+                logger.error(traceback.format_exc())
+            print(f"Analyzed node {n} fully.")
+
+        return name, itr_accs, itr_aucs
+
+    @dispatch(BaseSampler, int)
+    def get_exp(self, sampler, n, **train_hparams) -> torch.Tensor:
+        node_exp = BayesExplainer(self.model, sampler, n, self.k, self.x, self.data.y, self.edge_index)
+        node_exp.train(log=False, **train_hparams)
+        self.node_exp = node_exp
+        return node_exp.edge_mask()
+    
+    @dispatch(BaseSearcher, int)
+    def get_exp(self, searcher, n, **train_hparams) -> torch.Tensor:
+        node_exp = DeterministicExplainer(self.model, searcher, n, self.k, self.x, self.data.y, self.edge_index)
+        edge_mask = node_exp.edge_mask('.', **train_hparams)
+        self.node_exp = node_exp
+        return edge_mask
 
     @staticmethod
     def experiment_name(hparams: dict) -> str:
@@ -115,12 +186,3 @@ class Experiment:
         for k, v in hparams.items():
             name += f"{k}-{v}||"
         return name[:-2]
-
-
-
-
-
-
-
-
-
