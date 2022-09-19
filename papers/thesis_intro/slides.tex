@@ -1,0 +1,86 @@
+\documentclass[11pt]{beamer}
+\graphicspath{{Images/}{./}} % Specifies where to look for included images (trailing slash required)
+\usepackage{booktabs}
+\usetheme{Madrid}
+\usefonttheme{default}
+\useinnertheme{circles}
+
+\title[GNN Interpretation]{GNN Interpretation Thesis Project} % The short title in the optional parameter appears at the bottom of every slide, the full title in the main parameter is only on the title page
+\author[Shalin Patel]{Shalin Patel} % Presenter name(s), the optional parameter can contain a shortened version to appear on the bottom of every slide, while the main parameter will appear on the title slide
+\date[\today]
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\begin{frame}
+	\titlepage
+\end{frame}
+
+\section{Introduction}
+
+\begin{frame}
+    \frametitle{GNNs and Computational Biology}
+
+    \begin{itemize}
+        \item GNNs useful for creating multi-modal models of complex biological systems (e.g. Gene Expression)
+        \begin{itemize}
+            \item Based off HiC contact data
+            \item Based off Gene Regulatory Networks (GRNs)
+        \end{itemize}
+        \item These models often demonstrate state of the art performance
+        \item Many biological datasets demonstrate graphical structure and are often coerced into unnatural forms
+        \begin{itemize}
+            \item GNNs remove a lot of these issues
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Interpretation of GNNs}
+   
+    \begin{itemize}
+        \item While GNNs give better performance than previous models, interpretating them is harder than before
+        \item Many traditional models have well established interpretations
+        \begin{itemize}
+            \item SVMs, Random Forests, Logistic Regression all have natural interpretations
+            \item CNNs also have many interpretation methods including saliency maps, LIME, SHAP, \dots
+        \end{itemize} 
+        \item To derive understanding, and new biological value from the improved performance, interpretations for GNNs need to be generated
+        \item Specifically, we want to understand what parts of the underlying graph structure are driving newfound performance
+    \end{itemize}
+\end{frame}
+
+\section{Problem Formulation and Previous Work}
+\begin{frame}
+    \frametitle{Problem Formulation}
+
+    Let $\mathcal{G}$ denote a graph on edges $E$ and nodes $V$ such that each node is associated with $\mathcal{X} = \{x_1, \dots, x_n\}$.
+
+    \bigskip
+
+    Let $f : V \mapsto \{1, \dots, C\}$ represent a classification task on nodes in $V$. 
+
+    \bigskip
+    
+    Specifically, for a node $v$, a GNN $\phi$ that approximates $f$ learns the conditional distribution $P_{\phi}(Y \mid G_c(v), X_c(v))$ where $G_c$ and $X_c$ represent the computaitonal graph of $v$ (typical the $n$-hop neighborhood). Predictions are given as $\hat{y} = \phi(G_c(v), X_c(v))$.
+
+    \bigskip
+
+    The goal of GNN interpretation is to find $\psi : V \mapsto \mathcal{G}$ where $\psi(v) = G_s(v)$ such that $G_s(v) \subseteq G_c(v)$ and
+    \[
+        MI(\hat{y}, \phi(G_s(v), X_c(v))) 
+    \]
+    is maximized.
+\end{frame}
+
+\begin{frame}
+    \frametitle{GNNExplainer}
+
+    \begin{itemize}
+        \item 
+    \end{itemize}
+\end{frame}
+
+
+\end{document}
