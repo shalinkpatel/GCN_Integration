@@ -78,9 +78,32 @@
     \frametitle{GNNExplainer}
 
     \begin{itemize}
-        \item 
+        \item GNNExplainer works by learning a continuous mask $\sigma(M)$ such that $A_c \odot \sigma(M)$ represents the interpretation
+        \item GNNExplainer assumes $P_{\mathcal{G}}(G_S) = \prod_{(j,k) \in G_c} A_s[j, k]$ meaning that each edge is treated as an independent Bernoulli RV
+        \item This mask is learnt via backpropogation on the mutual information with respect ot these $A_s[j, k]$. 
+        \item In practice, this ignores all sorts of conditionality between the edges and is not rich enough to capture complex interactions between edges
+        \begin{itemize}
+            \item Does not perform well in replicaiton studies
+            \item Has extremely high variance and does not converge consistently
+        \end{itemize}
     \end{itemize}
 \end{frame}
 
+\section{Bayesian Approach}
+\begin{frame}
+    \frametitle{Bayesian Formulation}
+
+    \begin{itemize}
+        \item Specify a model $\bar{\psi}$ for sampling $G_s(v)$
+        \item Given a mask $M$ sampled from this distribution, condition $\phi(M, X_c(v))$ on $\phi(G_c(v), X_c(v))$ and update the parameters of $\bar{\psi}$ using SVI
+        \item There are many different models we can try
+        \item We want a good tradeoff between structure and flexibility to capture the complex conditional interactions that are happening in the underlying dataset
+    \end{itemize}
+\end{frame}
+
+\section{Current Attempts}
+\begin{frame}
+    \frametitle{Beta-Bernoulli Model}
+\end{frame}
 
 \end{document}
