@@ -89,6 +89,24 @@
     \end{itemize}
 \end{frame}
 
+\begin{frame}
+    \frametitle{PGExplainer}
+
+    \begin{itemize}
+        \item The current SOTA (based on some flawed benchmarks)
+        \item Has about 0.78 AUC in replication studies
+        \item Requires a split between graph embedding and inference model to work
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Benchmark Dataset}
+    
+    \begin{center}
+        \includegraphics[width=0.75\textwidth]{tree_cycles.png}
+    \end{center}
+\end{frame}
+
 \section{Bayesian Approach}
 \begin{frame}
     \frametitle{Bayesian Formulation}
@@ -104,6 +122,48 @@
 \section{Current Attempts}
 \begin{frame}
     \frametitle{Beta-Bernoulli Model}
+    \begin{itemize}
+        \item Sampled each edge from a Beta-Bernoulli variable with the following prior on a given edge \\
+        \begin{center}
+            \includegraphics[width = 0.5\textwidth]{beta_bernoulli.png}
+        \end{center}
+        \item Does not perform super well $\sim$ on par with GNNExplainer (makes sense these are essentially the same model)
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Random Walk Model}
+
+    \begin{itemize}
+        \item Worked by randomly choosing an node adjacent to $v$
+        \item Sampled edges in the set adjacent to all added nodes and continued until no more nodes to add with each edge being drawn from an independent Bernoulli distribution
+        \item Performed a bit better reaching $\sim$ 0.55 AUC
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Normalizing Flow Model}
+
+    \begin{itemize}
+        \item If there are $e$ edges in $G_c(v)$, we have an $e$-dimensional base mv-normal distribution
+        \item Uses and invertible spline transform-based normalizing flows to transform base distribution to a target distribution over all edges
+        \item Sampled from this target distribution to build an edge mask
+        \item Gives the most flexibility
+        \item Performs around $\sim$ 0.60 AUC
+    \end{itemize}
+\end{frame}
+
+\section{Conclusion}
+\begin{frame}
+    \frametitle{Next Steps}
+
+    \begin{itemize}
+        \item Defintely have some bugs that are leading to suboptimal training
+        \item Reevaluate how to evaluate these models
+        \item Evaluate PGExplainer against actual ground truth examples
+        \item Explore different transforms in the normalizing flow model
+        \item Combine random walk with normalizing flow
+    \end{itemize}
 \end{frame}
 
 \end{document}
