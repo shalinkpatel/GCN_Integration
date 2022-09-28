@@ -1,0 +1,9 @@
+[deps]
+AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+GraphNeuralNetworks = "cffab07f-9bc2-4db1-8861-388f63bf7694"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+Lazy = "50d2b5c4-7a5e-59d5-8109-a42b560f39c0"
+NPZ = "15e1cf62-19b3-5cfa-8e77-841668bca605"
+ProgressBars = "49802e3a-d2f1-5c88-81d8-b72133a6f568"
