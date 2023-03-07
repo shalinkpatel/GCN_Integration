@@ -6,7 +6,7 @@ function load_data()
     g = npzread("data/g.npy")
 
     G = SimpleDiGraph(length(y))
-    foreach(r -> add_edge!(G, r[1] + 1, r[2] + 1), eachrow(g))
+    foreach(r -> add_edge!(G, r[1], r[2]), eachrow(g))
     return GNNGraph(G, ndata=(; x = x, y = y))
 end
 

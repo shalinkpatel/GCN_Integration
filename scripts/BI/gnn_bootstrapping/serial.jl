@@ -9,6 +9,6 @@ Ḡ = noisy_graph(G, λ, ρ)
 
 open("data/noisy.data", "w") do f
     for (s, d) ∈ zip(Ḡ.graph[1], Ḡ.graph[2])
-        write(f, "$(s-1),$(d-1)\n")
+        write(f, "$(s),$(d)\n")
     end
 end;
