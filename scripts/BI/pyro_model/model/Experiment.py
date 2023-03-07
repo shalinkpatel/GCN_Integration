@@ -13,6 +13,7 @@ from torch_geometric.nn import GCNConv
 
 from BayesExplainer import BayesExplainer
 from DeterministicExplainer import DeterministicExplainer
+from MCMCExplainer import MCMCExplainer
 from samplers.BaseSampler import BaseSampler
 from searchers.BaseSearcher import BaseSearcher
 import traceback
@@ -23,6 +24,7 @@ from loguru import logger
 from utils.serialization import with_serializer
 
 from multipledispatch import dispatch
+
 
 class Net(torch.nn.Module):
     def __init__(self, y, x=64):
@@ -99,7 +101,7 @@ class Experiment:
                                        torch.mean((torch.argmax(log_logits, dim=1) == self.data.y).float()).item(), epoch)
 
     @with_serializer("dev")
-    def test_sampler(self, sampler, name: str, predicate=(lambda x: True), label_transform=(lambda x, node: x), **train_hparams):
+    def test_sampler(self, sampler, backend, name: str, predicate=(lambda x: True), label_transform=(lambda x, node: x), **train_hparams):
         auc = 0
         acc = 0
         itr_aucs = []
@@ -123,7 +125,7 @@ class Experiment:
         for n in nodes:
             try:
                 pyro.clear_param_store()
-                edge_mask = self.get_exp(sampler, n, **train_hparams)
+                edge_mask = self.get_exp(sampler, backend, n, **train_hparams)
                 masks += edge_mask.cpu().detach().numpy().tolist()
 
                 self.writer.add_histogram(f"{name}-edge-mask", edge_mask, n)
@@ -166,16 +168,16 @@ class Experiment:
 
         return name, itr_accs, itr_aucs
 
-    @dispatch(BaseSampler, int)
-    def get_exp(self, sampler, n, **train_hparams) -> torch.Tensor:
-        node_exp = BayesExplainer(self.model, sampler, n, self.k, self.x, self.data.y, self.edge_index)
+    @dispatch(BaseSampler, object, int)
+    def get_exp(self, sampler, backend, n, **train_hparams) -> torch.Tensor:
+        node_exp = backend(self.model, sampler, n, self.k, self.x, self.data.y, self.edge_index)
         node_exp.train(log=False, **train_hparams)
         self.node_exp = node_exp
         return node_exp.edge_mask()
     
-    @dispatch(BaseSearcher, int)
-    def get_exp(self, searcher, n, **train_hparams) -> torch.Tensor:
-        node_exp = DeterministicExplainer(self.model, searcher, n, self.k, self.x, self.data.y, self.edge_index)
+    @dispatch(BaseSearcher, object, int)
+    def get_exp(self, searcher, backend, n, **train_hparams) -> torch.Tensor:
+        node_exp = backend(self.model, searcher, n, self.k, self.x, self.data.y, self.edge_index)
         edge_mask = node_exp.edge_mask('.', **train_hparams)
         self.node_exp = node_exp
         return edge_mask

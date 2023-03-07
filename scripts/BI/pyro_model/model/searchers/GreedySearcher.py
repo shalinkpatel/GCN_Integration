@@ -7,6 +7,7 @@ from torch_geometric.utils import to_networkx, from_networkx
 from torch_geometric.data import Data
 import networkx as nx
 from torch.nn.functional import binary_cross_entropy
+import numpy as np
 
 
 class GreedySearcher(BaseSearcher):
@@ -38,8 +39,8 @@ class GreedySearcher(BaseSearcher):
             for consideration in possible_set.difference(added_edges):
                 test = deepcopy(added_edges)
                 test.add(consideration)
-                Gprime = nx.from_edgelist(list(test))
-                edge_index_mask = from_networkx(Gprime).edge_index
+                edge_index_mask = torch.Tensor(np.array([list(map(lambda x: x[0], test)), 
+                                                    list(map(lambda x: x[1], test))])).long()
                 preds_masked = explainer.model(X, edge_index_mask)[explainer.mapping].reshape(-1).exp()
 
                 curr_ent = binary_cross_entropy(preds, preds_masked).detach().tolist()

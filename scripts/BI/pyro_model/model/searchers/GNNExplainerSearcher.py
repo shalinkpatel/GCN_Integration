@@ -8,7 +8,7 @@ class GNNExplainerSearcher(BaseSearcher):
         self.epochs = epochs
 
     def search(self, X, y, explainer, **train_hparams):
-        exp = GNNExplainer(explainer.model, epochs=self.epochs)
+        exp = GNNExplainer(explainer.model, epochs=self.epochs, log=False)
         _, edge_mask = exp.explain_node(explainer.node_idx, explainer.x,
                                         explainer.edge_index)
         return edge_mask[explainer.edge_mask_hard]

@@ -5,6 +5,9 @@ from shutil import rmtree
 from math import sqrt
 
 import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize'] = (10, 10)
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['savefig.dpi'] = 300
 import networkx as nx
 import pyro
 import torch
@@ -14,6 +17,8 @@ from torch_geometric.utils import k_hop_subgraph, to_networkx
 from tqdm.autonotebook import tqdm
 
 from searchers.BaseSearcher import BaseSearcher
+
+removed = False
 
 class DeterministicExplainer:
     def __init__(self, model: torch.nn.Module, searcher: BaseSearcher, node_idx: int, k: int,
@@ -42,8 +47,10 @@ class DeterministicExplainer:
         self.edge_mask = edge_mask
         name = self.searcher.run_name()
         path = f"{base}/runs/individual/{name}"
-        if exists(path):
+        global removed
+        if exists(path) and not removed:
             rmtree(path)
+        removed = True
         writer = SummaryWriter(path)
         ax, _ = self.visualize_subgraph()
         writer.add_figure("Importance Graph", ax.get_figure(), 0)
@@ -81,7 +88,8 @@ class DeterministicExplainer:
         label_kwargs['font_size'] = kwargs.get('font_size') or 10
 
         pos = nx.spring_layout(G)
-        ax = plt.gca()
+        _ = plt.figure(figsize=(10, 10), dpi=300)
+        ax = plt.axes()
         ax.axis('off')
         for source, target, data in G.edges(data=True):
             ax.annotate(
@@ -93,7 +101,7 @@ class DeterministicExplainer:
                     shrinkB=sqrt(node_kwargs['node_size']) / 2.0,
                     connectionstyle="arc3,rad=0.1",
                 ))
-        nx.draw_networkx_nodes(G, pos, node_color=self.y.tolist(), **node_kwargs)
-        nx.draw_networkx_labels(G, pos, **label_kwargs)
-
+        nx.draw_networkx_nodes(G, pos, ax=ax, node_color=self.y.tolist(), **node_kwargs)
+        nx.draw_networkx_labels(G, pos, ax=ax, **label_kwargs)
+        
         return ax, G

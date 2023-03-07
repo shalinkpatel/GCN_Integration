@@ -5,6 +5,9 @@ from shutil import rmtree
 from math import sqrt
 
 import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize'] = (10, 10)
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['savefig.dpi'] = 300
 import networkx as nx
 import pyro
 import torch
@@ -17,11 +20,13 @@ from tqdm.autonotebook import tqdm
 
 from samplers.BaseSampler import BaseSampler
 
+from loguru import logger
+
+removed = False
 
 class BayesExplainer:
     def __init__(self, model: torch.nn.Module, sampler: BaseSampler, node_idx: int, k: int,
-                 x: torch.Tensor, y: torch.Tensor, edge_index: torch.Tensor):
-        device = torch.device('cpu')
+                 x: torch.Tensor, y: torch.Tensor, edge_index: torch.Tensor, mixed_mode: bool = False, device = torch.device('cpu')):
         self.model = model.to(device)
         self.x = x.to(device)
         self.y_true = y.to(device)
@@ -34,8 +39,16 @@ class BayesExplainer:
         self.x_adj = self.x[self.subset]
         self.device = device
 
+        self.mixed_mode = mixed_mode
+        if mixed_mode:
+            self.final_x = self.x
+            self.final_ei = self.edge_index
+        else:
+            self.final_x = self.x_adj
+            self.final_ei = self.edge_index_adj
+
         with torch.no_grad():
-            self.preds = model(self.x, self.edge_index_adj).exp()
+            self.preds = model(self.final_x, self.final_ei)
 
         self.N = self.edge_index_adj.size(1)
 
@@ -51,7 +64,7 @@ class BayesExplainer:
                 moving_aves.append(moving_ave)
         return moving_aves
 
-    def train(self, epochs: int = 3000, lr: float = 0.005, window: int = 1000, log: bool = True, base: str = "."):
+    def train(self, epochs: int = 3000, lr: float = 0.005, window: int = 1000, log: bool = True, base: str = ".", debug: bool = False):
         pyro.get_param_store().clear()
         adam_params = {"lr": lr, "betas": (0.95, 0.999)}
         optimizer = Adam(adam_params)
@@ -65,20 +78,30 @@ class BayesExplainer:
             pbar = tqdm(range(n_steps))
             name = self.sampler.run_name()
             path = f"{base}/runs/individual/{name}"
-            if exists(path):
+            global removed
+            if exists(path) and not removed:
                 rmtree(path)
+            removed = True
             writer = SummaryWriter(path)
         else:
             pbar = range(1, n_steps+1)
         elbos = []
         for step in pbar:
-            elbo = svi.step(self.x_adj, self.preds[self.mapping[0]], self)
+            if self.mixed_mode:
+                elbo = svi.step(self.final_x, self.preds, self)
+            else:
+                elbo = svi.step(self.x_adj, self.preds[self.mapping[0]], self)
             elbos.append(elbo)
             avgs = self.ma(elbos, window)
             if step >= window:
                 disp = avgs[-1]
             else:
                 disp = elbo
+            
+            if debug:
+                if step % 250 == 0:
+                     logger.info(f"epoch {step} || loss -> {disp}")            
+
             if log:
                 pbar.set_description("Loss -> %.4f" % disp)
                 if step % 100 == 0:
@@ -124,7 +147,8 @@ class BayesExplainer:
         label_kwargs['font_size'] = kwargs.get('font_size') or 10
 
         pos = nx.spring_layout(G)
-        ax = plt.gca()
+        _ = plt.figure(figsize=(10, 10), dpi=300)
+        ax = plt.axes()
         ax.axis('off')
         for source, target, data in G.edges(data=True):
             ax.annotate(
@@ -136,7 +160,7 @@ class BayesExplainer:
                     shrinkB=sqrt(node_kwargs['node_size']) / 2.0,
                     connectionstyle="arc3,rad=0.1",
                 ))
-        nx.draw_networkx_nodes(G, pos, node_color=self.y.tolist(), **node_kwargs)
-        nx.draw_networkx_labels(G, pos, **label_kwargs)
+        nx.draw_networkx_nodes(G, pos, ax=ax, node_color=self.y.tolist(), **node_kwargs)
+        nx.draw_networkx_labels(G, pos, ax=ax, **label_kwargs)
 
         return ax, G

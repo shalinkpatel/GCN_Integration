@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ff184c4d-d3e8-455c-9647-666ac114da2b" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../PGExplainer" beforeDir="false" afterPath="$PROJECT_DIR$/../PGExplainer" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gnn_bootstrapping/Manifest.toml" beforeDir="false" afterPath="$PROJECT_DIR$/../gnn_bootstrapping/Manifest.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gnn_bootstrapping/Project.toml" beforeDir="false" afterPath="$PROJECT_DIR$/../gnn_bootstrapping/Project.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gnn_bootstrapping/data/base.model" beforeDir="false" afterPath="$PROJECT_DIR$/../gnn_bootstrapping/data/base.model" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gnn_bootstrapping/data/base.results" beforeDir="false" afterPath="$PROJECT_DIR$/../gnn_bootstrapping/data/base.results" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gnn_bootstrapping/data/noisy.data" beforeDir="false" afterPath="$PROJECT_DIR$/../gnn_bootstrapping/data/noisy.data" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gnn_bootstrapping/load.jl" beforeDir="false" afterPath="$PROJECT_DIR$/../gnn_bootstrapping/load.jl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gnn_bootstrapping/serial.jl" beforeDir="false" afterPath="$PROJECT_DIR$/../gnn_bootstrapping/serial.jl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/.vscode/settings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/experiments/experiment_launcher.sh" beforeDir="false" afterPath="$PROJECT_DIR$/experiments/experiment_launcher.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/experiments/runs/individual/gnn_explainer/events.out.tfevents.1650401315.gpu1202.oscar.ccv.brown.edu.23561.1006" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/BayesExplainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/BayesExplainer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/samplers/NFGradSampler.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/samplers/NFGradSampler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/samplers/RandomWalkSampler.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/samplers/RandomWalkSampler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/searchers/GNNExplainerSearcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/searchers/GNNExplainerSearcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runs/syn3-full-verifed/events.out.tfevents.1650398755.gpu1202.oscar.ccv.brown.edu.23561.0" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2MhOnw2hWmBnstIcJ66MnLGxkKR" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "master",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "settings.editor.selected.configurable": "vcs.Git",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RdControllerToolWindowsLayoutState" isNewUi="true">
+    <layout>
+      <window_info id="Commit_Guest" />
+      <window_info id="Space Code Reviews" order="0" />
+      <window_info id="Bookmarks" order="0" side_tool="true" />
+      <window_info id="Pull Requests" order="0" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.25035715" />
+      <window_info id="Commit" order="0" />
+      <window_info id="Learn" order="0" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="0" />
+      <window_info anchor="bottom" id="Python Packages" order="4" />
+      <window_info anchor="bottom" id="File Transfer" order="4" />
+      <window_info anchor="bottom" id="Database Changes" order="4" />
+      <window_info anchor="bottom" id="Python Console" order="4" weight="0.33045685" />
+      <window_info anchor="bottom" id="Problems View" order="4" />
+      <window_info anchor="bottom" id="Terminal" order="4" weight="0.7649746" />
+      <window_info anchor="bottom" id="TypeScript" order="4" />
+      <window_info anchor="bottom" id="Services" order="4" />
+      <window_info anchor="bottom" id="Dependency Checker" order="4" />
+      <window_info anchor="right" id="Endpoints" order="0" show_stripe_button="false" />
+      <window_info anchor="right" id="Database" order="0" />
+      <window_info anchor="right" id="SciView" order="0" />
+      <window_info anchor="right" id="Notifications" order="0" weight="0.25035715" />
+      <window_info anchor="right" id="Structure" order="1" side_tool="true" visible="true" weight="0.25035715" />
+    </layout>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ff184c4d-d3e8-455c-9647-666ac114da2b" name="Changes" comment="" />
+      <created>1678216519859</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1678216519859</updated>
+      <workItem from="1678216521614" duration="259000" />
+      <workItem from="1678216795190" duration="599000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
