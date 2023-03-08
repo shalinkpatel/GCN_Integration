@@ -3,22 +3,14 @@ import sys
 sys.path.append("/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model")
 
 from samplers.NFGradSampler import NFGradSampler
-from DeterministicExplainer import DeterministicExplainer
 from BayesExplainer import BayesExplainer
-from samplers.BaseSampler import BaseSampler
 
-from loguru import logger
-
-import pyro
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import roc_auc_score, accuracy_score, f1_score, average_precision_score
 from tqdm import tqdm
-import numpy as np
 from itertools import chain
 from random import shuffle
 
-from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv
 from torch_geometric.explain import Explainer, GNNExplainer, PGExplainer
 from torch_geometric.explain.metric.basic import groundtruth_metrics
@@ -71,7 +63,8 @@ def train_model(model, X, y, edge_index, device):
             model.to(torch.device('cpu'))
             best_weights = model.state_dict()
             model.to(device)
-        print(f"Epoch {epoch} | Best Acc = {best_acc} | Loss = {loss_ep}")
+        if (epoch + 1 % 100) == 0:
+            print(f"Epoch {epoch} | Best Acc = {best_acc} | Loss = {loss_ep}")
     print('=' * 20 + ' Ended Training ' + '=' * 20)
     return best_weights
 
@@ -107,17 +100,17 @@ model = Model(y, 100)
 model.to(device)
 
 if exists(f"models/graph_class_{groups}groups.pt"):
-    print("Loading Previous Model")
+    print('=' * 20 + "Loading Previous Model" + '=' * 20)
     model.load_state_dict(torch.load(f"models/graph_class_{groups}groups.pt", map_location=torch.device('cpu')))
     model.to(device)
 else:
-    print("Training Model")
+    print('=' * 20 + "Training Model" + '=' * 20)
     sd = train_model(model, X, y, G, device)
     torch.save(sd, f"models/graph_class_{groups}groups.pt")
 
 m_names = ["accuracy", "recall", "precision", "f1_score", "auroc"]
 
-print("GNN Explainer")
+print('=' * 20 + "GNN Explainer" + '=' * 20)
 metrics_gnn_exp = [0, 0, 0, 0, 0]
 gnn_explainer = Explainer(
     model=model,
@@ -141,14 +134,15 @@ for x in range(y.shape[0]):
     metrics_gnn_exp = [m + r for m, r in zip(metrics_gnn_exp, res)]
 metrics_gnn_exp = [m / y.shape[0] for m in metrics_gnn_exp]
 avg_gnnexp_explanation /= y.shape[0]
-print("GNNExp Results")
+print('=' * 20 + "GNNExp Results" + '=' * 20)
 print({n: v for n, v in zip(m_names, metrics_gnn_exp)})
 print({n: v for n, v in zip(m_names, groundtruth_metrics(final_gnnexp_explanation, gt_grn))})
 print({n: v for n, v in zip(m_names, groundtruth_metrics(avg_gnnexp_explanation, gt_grn))})
 save_masks("gnnexp_max_mask", gt_grn, final_gnnexp_explanation, G)
 save_masks("gnnexp_avg_mask", gt_grn, avg_gnnexp_explanation, G)
 
-print("PG Explainer")
+
+print('=' * 20 + "PG Explainer" + '=' * 20)
 metrics_pg_exp = [0, 0, 0, 0, 0]
 pg_explainer = Explainer(
     model=model,
@@ -174,33 +168,36 @@ for x in range(y.shape[0]):
     metrics_gnn_exp = [m + r for m, r in zip(metrics_gnn_exp, res)]
 metrics_gnn_exp = [m / y.shape[0] for m in metrics_gnn_exp]
 avg_pgexp_explanation /= y.shape[0]
-print("PGExp Results")
+print('=' * 20 + "PGExp Results" + '=' * 20)
 print({n: v for n, v in zip(m_names, metrics_gnn_exp)})
 print({n: v for n, v in zip(m_names, groundtruth_metrics(final_pgexp_explanation, gt_grn))})
 print({n: v for n, v in zip(m_names, groundtruth_metrics(avg_pgexp_explanation, gt_grn))})
 save_masks("pgexp_max_mask", gt_grn, final_pgexp_explanation, G)
 save_masks("pgexp_avg_mask", gt_grn, avg_pgexp_explanation, G)
 
-print("NFG Explainer")
+
+print('=' * 20 + "NFG Explainer" + '=' * 20)
 metrics_nf_grad = [0, 0, 0, 0, 0]
 nfg_hparams = {
     "name": "normalizing_flows_grad",
-    "splines": 12,
+    "splines": 4,
     "sigmoid": True,
     "lambd": 5.0,
     "p": 1.5,
 }
 nfg_sampler = NFGradSampler(device=device, **nfg_hparams)
-for x in tqdm(range(y.shape[0])):
+samples = list(range(y.shape[0]))
+shuffle(samples)
+for x in tqdm(samples[:int(0.05 * len(samples))]):
     nodes = list(range(X.shape[0]))
     shuffle(nodes)
     for n in nodes[:int(0.1 * len(nodes))]:
         explainer = BayesExplainer(model, nfg_sampler, n, 3, X[:, x:x + 1], y, G, True, device)
-        explainer.train(epochs=500, lr=0.001, window=500, log=False)
+        explainer.train(epochs=750, lr=0.001, window=500, log=False)
         res = explainer.edge_mask()
         _, _, _, edge_mask_hard = k_hop_subgraph(n, 3, G)
         res = groundtruth_metrics(res, gt_grn[edge_mask_hard])
         metrics_nf_grad = [m + r for m, r in zip(metrics_nf_grad, res)]
 metrics_nf_grad = [m / (y.shape[0] * X.shape[0]) for m in metrics_nf_grad]
-print("NFG Results")
+print('=' * 20 + "NFG Results" + '=' * 20)
 print({n: v for n, v in zip(m_names, metrics_nf_grad)})
