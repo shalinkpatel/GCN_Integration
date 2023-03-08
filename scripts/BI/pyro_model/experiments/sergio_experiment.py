@@ -79,13 +79,17 @@ def save_masks(name: str, grn: torch.Tensor, exp: torch.Tensor, ei: torch.Tensor
 device = torch.device('cpu')
 
 X = torch.load(
-    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups-1sparsity.pt").float()
+    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups"
+    f"-1sparsity.pt").float()
 y = torch.load(
-    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups-labels.pt")
+    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups"
+    f"-labels.pt")
 G = torch.load(
-    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups-1sparsity-compgraph.pt")
+    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups"
+    f"-1sparsity-compgraph.pt")
 grn = torch.load(
-    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups-gt-grn.pt")
+    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups"
+    f"-gt-grn.pt")
 
 X = X.to(device)
 y = y.to(device)
