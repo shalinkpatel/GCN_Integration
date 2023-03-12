@@ -120,20 +120,22 @@ print('=' * 20 + "NFG Explainer" + '=' * 20)
 metrics_nf_grad = [0, 0, 0, 0, 0]
 nfg_hparams = {
     "name": "normalizing_flows_grad",
-    "splines": 4,
+    "splines": 6,
     "sigmoid": True,
     "lambd": 5.0,
     "p": 1.5,
 }
-nfg_sampler = NFGradSampler(device=device, **nfg_hparams)
 samples = list(range(y.shape[0]))
 shuffle(samples)
 for x in tqdm(samples[:int(0.05 * len(samples))]):
     nodes = list(range(X.shape[0]))
     shuffle(nodes)
-    for n in nodes[:int(0.1 * len(nodes))]:
+    for n in tqdm(nodes[:int(0.1 * len(nodes))]):
+        nfg_sampler = NFGradSampler(device=device, **nfg_hparams)
         explainer = BayesExplainer(model, nfg_sampler, n, 3, X[:, x:x + 1], y, G, True, device)
-        explainer.train(epochs=750, lr=0.001, window=500, log=False)
+        if explainer.edge_index_adj.shape[1] == 0:
+            continue
+        explainer.train(epochs=250, lr=0.001, window=500, log=False)
         res = explainer.edge_mask()
         _, _, _, edge_mask_hard = k_hop_subgraph(n, 3, G)
         res = groundtruth_metrics(res, gt_grn[edge_mask_hard])

@@ -131,8 +131,8 @@ class NFGradSampler(BaseSampler):
 
     def L(self, p):
         sample = self.flow_dist.rsample(torch.Size([250, ]))
-        sample = sample.sigmoid() if self.sigmoid else sample.clamp(0, 1)
-        sample = sample.pow(p)
+        s2 = sample.sigmoid() if self.sigmoid else sample.clamp(0, 1)
+        sample = s2.pow(p)
         sample = sample / sample.max()
         return sample.mean()
 

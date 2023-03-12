@@ -11,4 +11,5 @@ experiment=$1
 shift
 
 source ~/ml/bin/activate
+export PYTHONPATH="$PYTHONPATH:$pwd"
 python3 $experiment $@
