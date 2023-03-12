@@ -18,7 +18,7 @@ from torch_geometric.data import Data
 from torch_geometric.utils import k_hop_subgraph, to_networkx
 from tqdm.autonotebook import tqdm
 
-from samplers.BaseSampler import BaseSampler
+from model.samplers.BaseSampler import BaseSampler
 
 from loguru import logger
 

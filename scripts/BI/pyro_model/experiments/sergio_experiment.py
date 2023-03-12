@@ -1,15 +1,12 @@
-import sys
-
-sys.path.append("/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model")
-
-from samplers.NFGradSampler import NFGradSampler
-from BayesExplainer import BayesExplainer
+from model.samplers.NFGradSampler import NFGradSampler
+from model.BayesExplainer import BayesExplainer
 
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 from itertools import chain
 from random import shuffle
+import sys
 
 from torch_geometric.nn import GCNConv
 from torch_geometric.explain import Explainer, GNNExplainer, PGExplainer
@@ -20,7 +17,7 @@ from os.path import exists
 
 groups = sys.argv[1]
 
-
+# Definitions
 class Model(torch.nn.Module):
     def __init__(self, y, N, x=64):
         super(Model, self).__init__()
@@ -76,19 +73,20 @@ def save_masks(name: str, grn: torch.Tensor, exp: torch.Tensor, ei: torch.Tensor
             f.write(f'{s.item()},{d.item()},{g.item()},{e.item()}\n')
 
 
+# Loading Data
 device = torch.device('cpu')
 
 X = torch.load(
-    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups"
+    f"model/sergio/final_data/100gene-{groups}groups"
     f"-1sparsity.pt").float()
 y = torch.load(
-    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups"
+    f"model/sergio/final_data/100gene-{groups}groups"
     f"-labels.pt")
 G = torch.load(
-    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups"
+    f"model/sergio/final_data/100gene-{groups}groups"
     f"-1sparsity-compgraph.pt")
 grn = torch.load(
-    f"/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/model/sergio/final_data/100gene-{groups}groups"
+    f"model/sergio/final_data/100gene-{groups}groups"
     f"-gt-grn.pt")
 
 X = X.to(device)
@@ -103,17 +101,49 @@ gt_grn = torch.tensor([1 if (s.cpu().item(), d.cpu().item()) in grn_s else 0 for
 model = Model(y, 100)
 model.to(device)
 
-if exists(f"models/graph_class_{groups}groups.pt"):
+
+# Model Training
+if exists(f"experiments/models/graph_class_{groups}groups.pt"):
     print('=' * 20 + "Loading Previous Model" + '=' * 20)
-    model.load_state_dict(torch.load(f"models/graph_class_{groups}groups.pt", map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load(f"experiments/models/graph_class_{groups}groups.pt", map_location=torch.device('cpu')))
     model.to(device)
 else:
     print('=' * 20 + "Training Model" + '=' * 20)
     sd = train_model(model, X, y, G, device)
-    torch.save(sd, f"models/graph_class_{groups}groups.pt")
+    torch.save(sd, f"experiments/models/graph_class_{groups}groups.pt")
 
 m_names = ["accuracy", "recall", "precision", "f1_score", "auroc"]
 
+
+# NFG Explainer
+print('=' * 20 + "NFG Explainer" + '=' * 20)
+metrics_nf_grad = [0, 0, 0, 0, 0]
+nfg_hparams = {
+    "name": "normalizing_flows_grad",
+    "splines": 4,
+    "sigmoid": True,
+    "lambd": 5.0,
+    "p": 1.5,
+}
+nfg_sampler = NFGradSampler(device=device, **nfg_hparams)
+samples = list(range(y.shape[0]))
+shuffle(samples)
+for x in tqdm(samples[:int(0.05 * len(samples))]):
+    nodes = list(range(X.shape[0]))
+    shuffle(nodes)
+    for n in nodes[:int(0.1 * len(nodes))]:
+        explainer = BayesExplainer(model, nfg_sampler, n, 3, X[:, x:x + 1], y, G, True, device)
+        explainer.train(epochs=750, lr=0.001, window=500, log=False)
+        res = explainer.edge_mask()
+        _, _, _, edge_mask_hard = k_hop_subgraph(n, 3, G)
+        res = groundtruth_metrics(res, gt_grn[edge_mask_hard])
+        metrics_nf_grad = [m + r for m, r in zip(metrics_nf_grad, res)]
+metrics_nf_grad = [m / (y.shape[0] * X.shape[0]) for m in metrics_nf_grad]
+print('=' * 20 + "NFG Results" + '=' * 20)
+print({n: v for n, v in zip(m_names, metrics_nf_grad)})
+
+
+# GNN Explainer
 print('=' * 20 + "GNN Explainer" + '=' * 20)
 metrics_gnn_exp = [0, 0, 0, 0, 0]
 gnn_explainer = Explainer(
@@ -146,6 +176,7 @@ save_masks("gnnexp_max_mask", gt_grn, final_gnnexp_explanation, G)
 save_masks("gnnexp_avg_mask", gt_grn, avg_gnnexp_explanation, G)
 
 
+# PG Explainers
 print('=' * 20 + "PG Explainer" + '=' * 20)
 metrics_pg_exp = [0, 0, 0, 0, 0]
 pg_explainer = Explainer(
@@ -178,30 +209,3 @@ print({n: v for n, v in zip(m_names, groundtruth_metrics(final_pgexp_explanation
 print({n: v for n, v in zip(m_names, groundtruth_metrics(avg_pgexp_explanation, gt_grn))})
 save_masks("pgexp_max_mask", gt_grn, final_pgexp_explanation, G)
 save_masks("pgexp_avg_mask", gt_grn, avg_pgexp_explanation, G)
-
-
-print('=' * 20 + "NFG Explainer" + '=' * 20)
-metrics_nf_grad = [0, 0, 0, 0, 0]
-nfg_hparams = {
-    "name": "normalizing_flows_grad",
-    "splines": 4,
-    "sigmoid": True,
-    "lambd": 5.0,
-    "p": 1.5,
-}
-nfg_sampler = NFGradSampler(device=device, **nfg_hparams)
-samples = list(range(y.shape[0]))
-shuffle(samples)
-for x in tqdm(samples[:int(0.05 * len(samples))]):
-    nodes = list(range(X.shape[0]))
-    shuffle(nodes)
-    for n in nodes[:int(0.1 * len(nodes))]:
-        explainer = BayesExplainer(model, nfg_sampler, n, 3, X[:, x:x + 1], y, G, True, device)
-        explainer.train(epochs=750, lr=0.001, window=500, log=False)
-        res = explainer.edge_mask()
-        _, _, _, edge_mask_hard = k_hop_subgraph(n, 3, G)
-        res = groundtruth_metrics(res, gt_grn[edge_mask_hard])
-        metrics_nf_grad = [m + r for m, r in zip(metrics_nf_grad, res)]
-metrics_nf_grad = [m / (y.shape[0] * X.shape[0]) for m in metrics_nf_grad]
-print('=' * 20 + "NFG Results" + '=' * 20)
-print({n: v for n, v in zip(m_names, metrics_nf_grad)})
