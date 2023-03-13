@@ -120,29 +120,42 @@ print('=' * 20 + "NFG Explainer" + '=' * 20)
 metrics_nf_grad = [0, 0, 0, 0, 0]
 nfg_hparams = {
     "name": "normalizing_flows_grad",
-    "splines": 6,
+    "splines": 3,
     "sigmoid": True,
     "lambd": 5.0,
     "p": 1.5,
 }
 samples = list(range(y.shape[0]))
 shuffle(samples)
+n_samples = 0
+final_nfgexp_explanation = torch.zeros_like(gt_grn).float()
+avg_nfgexp_explanation = torch.zeros_like(gt_grn).float()
+avg_nfgexp_touched = torch.zeros_like(gt_grn).float()
 for x in tqdm(samples[:int(0.05 * len(samples))]):
     nodes = list(range(X.shape[0]))
     shuffle(nodes)
-    for n in tqdm(nodes[:int(0.1 * len(nodes))]):
+    for n in nodes[:int(0.1 * len(nodes))]:
         nfg_sampler = NFGradSampler(device=device, **nfg_hparams)
         explainer = BayesExplainer(model, nfg_sampler, n, 3, X[:, x:x + 1], y, G, True, device)
         if explainer.edge_index_adj.shape[1] == 0:
             continue
-        explainer.train(epochs=250, lr=0.001, window=500, log=False)
+        explainer.train(epochs=500, lr=0.001, window=500, log=False)
         res = explainer.edge_mask()
         _, _, _, edge_mask_hard = k_hop_subgraph(n, 3, G)
+        final_nfgexp_explanation[edge_mask_hard] = torch.max(final_nfgexp_explanation[edge_mask_hard], res)
+        avg_nfgexp_explanation[edge_mask_hard] += res
+        avg_nfgexp_touched[edge_mask_hard] += 1
         res = groundtruth_metrics(res, gt_grn[edge_mask_hard])
         metrics_nf_grad = [m + r for m, r in zip(metrics_nf_grad, res)]
-metrics_nf_grad = [m / (y.shape[0] * X.shape[0]) for m in metrics_nf_grad]
+        n_samples += 1
+metrics_nf_grad = [m / n_samples for m in metrics_nf_grad]
+avg_nfgexp_explanation /= avg_nfgexp_touched
 print('=' * 20 + "NFG Results" + '=' * 20)
 print({n: v for n, v in zip(m_names, metrics_nf_grad)})
+print({n: v for n, v in zip(m_names, groundtruth_metrics(final_nfgexp_explanation, gt_grn))})
+print({n: v for n, v in zip(m_names, groundtruth_metrics(avg_nfgexp_explanation, gt_grn))})
+save_masks("nfgexp_max_mask", gt_grn, final_nfgexp_explanation, G)
+save_masks("nfgexp_avg_mask", gt_grn, avg_nfgexp_explanation, G)
 
 
 # GNN Explainer
@@ -160,7 +173,7 @@ gnn_explainer = Explainer(
         return_type='log_probs',
     ),
 )
-final_gnnexp_explanation = torch.zeros_like(gt_grn)
+final_gnnexp_explanation = torch.zeros_like(gt_grn).float()
 avg_gnnexp_explanation = torch.zeros_like(gt_grn).float()
 for x in range(y.shape[0]):
     gnn_exp_explanation = gnn_explainer(X[:, x:x + 1], G)
@@ -195,7 +208,7 @@ pg_explainer = Explainer(
 for epoch in range(100):
     for x in range(y.shape[0]):
         pg_explainer.algorithm.train(epoch * y.shape[0] + x, model, X[:, x:x + 1], G, target=y[x])
-final_pgexp_explanation = torch.zeros_like(gt_grn)
+final_pgexp_explanation = torch.zeros_like(gt_grn).float()
 avg_pgexp_explanation = torch.zeros_like(gt_grn).float()
 for x in range(y.shape[0]):
     pg_exp_explanation = pg_explainer(X[:, x:x + 1], G, target=y[x])
