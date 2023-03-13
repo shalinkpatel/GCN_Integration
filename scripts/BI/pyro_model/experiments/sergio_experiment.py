@@ -67,7 +67,7 @@ def train_model(model, X, y, edge_index, device):
 
 
 def save_masks(name: str, grn: torch.Tensor, exp: torch.Tensor, ei: torch.Tensor):
-    with open(f'{name}_{groups}.csv', 'w') as f:
+    with open(f'experiments/masks/{name}_{groups}.csv', 'w') as f:
         f.write('s,d,grn,exp\n')
         for s, d, g, e in zip(ei[0, :], ei[1, :], grn, exp):
             f.write(f'{s.item()},{d.item()},{g.item()},{e.item()}\n')
