@@ -131,7 +131,7 @@ n_samples = 0
 final_nfgexp_explanation = torch.zeros_like(gt_grn).float()
 avg_nfgexp_explanation = torch.zeros_like(gt_grn).float()
 avg_nfgexp_touched = torch.zeros_like(gt_grn).float()
-for x in tqdm(samples[:int(0.05 * len(samples))]):
+for x in samples[:int(0.025 * len(samples))]:
     nodes = list(range(X.shape[0]))
     shuffle(nodes)
     for n in nodes[:int(0.1 * len(nodes))]:
