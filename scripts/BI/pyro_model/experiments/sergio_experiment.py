@@ -82,7 +82,7 @@ def train_nfg_model(device: torch.device, model: Model, node: int,
     explainer = BayesExplainer(model, nfg_sampler, node, 3, X, y, G, True, device)
     if explainer.edge_index_adj.shape[1] == 0:
         return (node, None)
-    explainer.train(epochs=1, lr=0.001, window=500, log=False)
+    explainer.train(epochs=1250, lr=0.001, window=500, log=False)
     res = explainer.edge_mask()
     return (node, res)
 
@@ -153,6 +153,7 @@ if __name__ == '__main__':
         nodes = list(range(X.shape[0]))
         shuffle(nodes)
         start = time.time()
+        print(f"Starting training run for graph {graph}")
         results = mp_pool.starmap(train_nfg_model, zip(repeat(device), repeat(model),
             nodes[:procs], repeat(X[:,x:x+1]), repeat(y), repeat(G), repeat(nfg_hparams)))
         print(f"Time for graph {graph}: {time.time() - start}")
