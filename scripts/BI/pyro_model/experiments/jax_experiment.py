@@ -88,6 +88,6 @@ best_acc = 0
 pbar = tqdm(range(3000))
 for step in pbar:
     acc = accuracy(params).item()
-    best_acc = acc if acc > best_acc else acc
+    best_acc = acc if acc > best_acc else best_acc
     pbar.set_description(f"Epoch {step} Best Accuracy {best_acc}")
     params, opt_state = update(params, opt_state)
