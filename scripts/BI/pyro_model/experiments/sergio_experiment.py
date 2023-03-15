@@ -143,20 +143,20 @@ if __name__ == '__main__':
     samples = list(range(y.shape[0]))
     shuffle(samples)
     n_samples = 0
+    graph = 0
     final_nfgexp_explanation = torch.zeros_like(gt_grn).float()
     avg_nfgexp_explanation = torch.zeros_like(gt_grn).float()
     avg_nfgexp_touched = torch.zeros_like(gt_grn).float()
     mp_pool = Pool(processes=procs)
     for x in samples[:int(0.2 * len(samples))]:
+        graph += 1
         nodes = list(range(X.shape[0]))
         shuffle(nodes)
         start = 0
-        if n_samples == 0:
-            start = time.time()
+        start = time.time()
         results = mp_pool.starmap(train_nfg_model, zip(repeat(device), repeat(model),
             nodes[:procs], repeat(X[:,x:x+1]), repeat(y), repeat(G), repeat(nfg_hparams)))
-        if n_samples == 0:
-            print(f"Time for Single Graph {time.time() - start}")
+        print(f"Time for graph {graph}: {time.time() - start}")
         for n, res in results:
             if res is None:
                 continue
