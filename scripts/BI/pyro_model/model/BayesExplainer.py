@@ -97,10 +97,10 @@ class BayesExplainer:
                 disp = avgs[-1]
             else:
                 disp = elbo
-            
+
             if debug:
                 if step % 250 == 0:
-                     logger.info(f"epoch {step} || loss -> {disp}")            
+                     logger.info(f"epoch {step} || loss -> {disp}")
 
             if log:
                 pbar.set_description("Loss -> %.4f" % disp)
@@ -113,7 +113,7 @@ class BayesExplainer:
                     writer.add_histogram("Importances", self.sampler.edge_mask(self), step)
         return avgs
 
-    def edge_mask(self):
+    def edge_mask(self) -> torch.Tensor:
         return self.sampler.edge_mask(self)
 
     def visualize_subgraph(self, edge_mask=None, threshold=None, **kwargs):

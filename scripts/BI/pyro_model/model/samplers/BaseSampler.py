@@ -17,7 +17,7 @@ class BaseSampler:
         pass
 
     @abstractmethod
-    def edge_mask(self, explainer):
+    def edge_mask(self, explainer) -> torch.Tensor:
         pass
 
     @abstractmethod
