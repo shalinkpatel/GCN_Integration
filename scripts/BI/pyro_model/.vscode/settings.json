@@ -1,5 +1,5 @@
 {
-    "editor.fontFamily": "'IBM Plex Mono'",
+    "editor.fontFamily": "Berkeley Mono",
     "editor.fontLigatures": true,
     "julia.environmentPath": "/users/spate116/.julia/environments/v1.7",
     "editor.fontWeight": "400"
