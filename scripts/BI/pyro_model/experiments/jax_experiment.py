@@ -82,6 +82,6 @@ def accuracy(params):
     return jnp.mean(jnp.argmax(decoded_nodes, axis=1) == y)
 
 # Training Loop
-for step in range(500):
+for step in range(3000):
     print(f"Epoch {step} Accuracy {accuracy(params).item()}")
     params, opt_state = update(params, opt_state)
