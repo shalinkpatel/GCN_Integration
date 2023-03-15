@@ -152,7 +152,6 @@ if __name__ == '__main__':
         graph += 1
         nodes = list(range(X.shape[0]))
         shuffle(nodes)
-        start = 0
         start = time.time()
         results = mp_pool.starmap(train_nfg_model, zip(repeat(device), repeat(model),
             nodes[:procs], repeat(X[:,x:x+1]), repeat(y), repeat(G), repeat(nfg_hparams)))

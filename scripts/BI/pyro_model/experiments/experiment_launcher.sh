@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH -p batch
+#SBATCH -p bigmem
 #SBATCH -N 1
 #SBATCH -c 12
-#SBATCH --time 96:00:00
-#SBATCH --mem-per-cpu 16G
+#SBATCH --time 48:00:00
+#SBATCH --mem-per-cpu 32G
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=shalin_patel@brown.edu
 
