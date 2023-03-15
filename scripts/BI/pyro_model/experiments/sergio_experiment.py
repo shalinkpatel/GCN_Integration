@@ -17,7 +17,7 @@ from torch.multiprocessing import Pool
 from os.path import exists
 from typing import Union, Tuple
 
-procs = 16
+procs = 2
 
 # Definitions
 class Model(torch.nn.Module):
@@ -81,7 +81,7 @@ def train_nfg_model(device: torch.device, model: Model, node: int,
     explainer = BayesExplainer(model, nfg_sampler, node, 3, X, y, G, True, device)
     if explainer.edge_index_adj.shape[1] == 0:
         return (node, None)
-    explainer.train(epochs=10, lr=0.001, window=500, log=False)
+    explainer.train(epochs=2, lr=0.001, window=500, log=False)
     res = explainer.edge_mask()
     return (node, res)
 
@@ -151,6 +151,7 @@ if __name__ == '__main__':
         shuffle(nodes)
         results = mp_pool.starmap(train_nfg_model, zip(repeat(device), repeat(model),
             nodes[:procs], repeat(X[:,x:x+1]), repeat(y), repeat(G), repeat(nfg_hparams)))
+        print("FINISHED FIRST RES")
         for n, res in results:
             if res is None:
                 continue
