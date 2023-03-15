@@ -1,5 +1,6 @@
 import sys
 from itertools import chain
+from jax._src.lax.lax import acos
 import jax.numpy as jnp
 import jax
 import torch
@@ -7,6 +8,7 @@ import jraph as jg
 import haiku as hk
 import optax as ox
 import logging
+from tqdm import tqdm
 
 # Load Data
 groups = sys.argv[1]
@@ -82,6 +84,10 @@ def accuracy(params):
     return jnp.mean(jnp.argmax(decoded_nodes, axis=1) == y)
 
 # Training Loop
-for step in range(3000):
-    print(f"Epoch {step} Accuracy {accuracy(params).item()}")
+best_acc = 0
+pbar = tqdm(range(3000))
+for step in pbar:
+    acc = accuracy(params).item()
+    best_acc = acc if acc > best_acc else acc
+    pbar.set_description(f"Epoch {step} Best Accuracy {best_acc}")
     params, opt_state = update(params, opt_state)
