@@ -82,7 +82,7 @@ def train_nfg_model(device: torch.device, model: Model, node: int,
     explainer = BayesExplainer(model, nfg_sampler, node, 3, X, y, G, True, device)
     if explainer.edge_index_adj.shape[1] == 0:
         return (node, None)
-    explainer.train(epochs=1500, lr=0.001, window=500, log=False)
+    explainer.train(epochs=1, lr=0.001, window=500, log=False)
     res = explainer.edge_mask()
     return (node, res)
 
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     avg_nfgexp_explanation = torch.zeros_like(gt_grn).float()
     avg_nfgexp_touched = torch.zeros_like(gt_grn).float()
     mp_pool = Pool(processes=procs)
-    for x in samples[:int(0.2 * len(samples))]:
+    for x in samples[:int(0.1 * len(samples))]:
         graph += 1
         nodes = list(range(X.shape[0]))
         shuffle(nodes)
