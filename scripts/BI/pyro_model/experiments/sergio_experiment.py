@@ -119,11 +119,11 @@ if __name__ == '__main__':
 
     # Model Training
     if exists(f"experiments/models/graph_class_{groups}groups.pt"):
-        print('=' * 20 + "Loading Previous Model" + '=' * 20)
+        print('=' * 20 + " Loading Previous Model " + '=' * 20)
         model.load_state_dict(torch.load(f"experiments/models/graph_class_{groups}groups.pt", map_location=torch.device('cpu')))
         model.to(device)
     else:
-        print('=' * 20 + "Training Model" + '=' * 20)
+        print('=' * 20 + " Training Model " + '=' * 20)
         sd = train_model(model, X, y, G, device)
         torch.save(sd, f"experiments/models/graph_class_{groups}groups.pt")
 
@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
 
     # NFG Explainer
-    print('=' * 20 + "NFG Explainer" + '=' * 20)
+    print('=' * 20 + " NFG Explainer " + '=' * 20)
     metrics_nf_grad = [0, 0, 0, 0, 0]
     nfg_hparams = {
         "name": "normalizing_flows_grad",
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     mp_pool.join()
     metrics_nf_grad = [m / n_samples for m in metrics_nf_grad]
     avg_nfgexp_explanation /= avg_nfgexp_touched
-    print('=' * 20 + "NFG Results" + '=' * 20)
+    print('=' * 20 + " NFG Results " + '=' * 20)
     print({n: v for n, v in zip(m_names, metrics_nf_grad)})
     print({n: v for n, v in zip(m_names, groundtruth_metrics(final_nfgexp_explanation, gt_grn))})
     print({n: v for n, v in zip(m_names, groundtruth_metrics(avg_nfgexp_explanation, gt_grn))})
@@ -180,7 +180,7 @@ if __name__ == '__main__':
 
 
     # GNN Explainer
-    print('=' * 20 + "GNN Explainer" + '=' * 20)
+    print('=' * 20 + " GNN Explainer " + '=' * 20)
     metrics_gnn_exp = [0, 0, 0, 0, 0]
     gnn_explainer = Explainer(
         model=model,
@@ -204,7 +204,7 @@ if __name__ == '__main__':
         metrics_gnn_exp = [m + r for m, r in zip(metrics_gnn_exp, res)]
     metrics_gnn_exp = [m / y.shape[0] for m in metrics_gnn_exp]
     avg_gnnexp_explanation /= y.shape[0]
-    print('=' * 20 + "GNNExp Results" + '=' * 20)
+    print('=' * 20 + " GNNExp Results " + '=' * 20)
     print({n: v for n, v in zip(m_names, metrics_gnn_exp)})
     print({n: v for n, v in zip(m_names, groundtruth_metrics(final_gnnexp_explanation, gt_grn))})
     print({n: v for n, v in zip(m_names, groundtruth_metrics(avg_gnnexp_explanation, gt_grn))})
@@ -213,7 +213,7 @@ if __name__ == '__main__':
 
 
     # PG Explainers
-    print('=' * 20 + "PG Explainer" + '=' * 20)
+    print('=' * 20 + " PG Explainer " + '=' * 20)
     metrics_pg_exp = [0, 0, 0, 0, 0]
     pg_explainer = Explainer(
         model=model,
@@ -239,7 +239,7 @@ if __name__ == '__main__':
         metrics_gnn_exp = [m + r for m, r in zip(metrics_gnn_exp, res)]
     metrics_gnn_exp = [m / y.shape[0] for m in metrics_gnn_exp]
     avg_pgexp_explanation /= y.shape[0]
-    print('=' * 20 + "PGExp Results" + '=' * 20)
+    print('=' * 20 + " PGExp Results " + '=' * 20)
     print({n: v for n, v in zip(m_names, metrics_gnn_exp)})
     print({n: v for n, v in zip(m_names, groundtruth_metrics(final_pgexp_explanation, gt_grn))})
     print({n: v for n, v in zip(m_names, groundtruth_metrics(avg_pgexp_explanation, gt_grn))})
