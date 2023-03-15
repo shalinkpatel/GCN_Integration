@@ -7,6 +7,7 @@ from tqdm import tqdm
 from itertools import chain, repeat
 from random import shuffle
 import sys
+import time
 
 from torch_geometric.nn import GCNConv
 from torch_geometric.explain import Explainer, GNNExplainer, PGExplainer
@@ -149,8 +150,13 @@ if __name__ == '__main__':
     for x in samples[:int(0.05 * len(samples))]:
         nodes = list(range(X.shape[0]))
         shuffle(nodes)
+        start = 0
+        if n_samples == 0:
+            start = time.time()
         results = mp_pool.starmap(train_nfg_model, zip(repeat(device), repeat(model),
             nodes[:procs], repeat(X[:,x:x+1]), repeat(y), repeat(G), repeat(nfg_hparams)))
+        if n_samples == 0:
+            print(f"Time for Single Graph {time.time() - start}")
         for n, res in results:
             if res is None:
                 continue
