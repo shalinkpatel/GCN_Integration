@@ -1,9 +1,11 @@
 #!/bin/bash
-#SBATCH -p bigmem
-#SBATCH --nodes 1
-#SBATCH -c 1
-#SBATCH --time 48:00:00
-#SBATCH --mem-per-cpu 128G
+#SBATCH -p batch
+#SBATCH -N 1
+#SBATCH -c 16
+#SBATCH --time 96:00:00
+#SBATCH --mem-per-cpu 16G
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=shalin_patel@brown.edu
 
 export CUDA_LAUNCH_BLOCKING=1
 

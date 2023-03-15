@@ -17,7 +17,7 @@ from torch.multiprocessing import Pool
 from os.path import exists
 from typing import Union, Tuple
 
-procs = 2
+procs = 16
 
 # Definitions
 class Model(torch.nn.Module):
@@ -81,7 +81,7 @@ def train_nfg_model(device: torch.device, model: Model, node: int,
     explainer = BayesExplainer(model, nfg_sampler, node, 3, X, y, G, True, device)
     if explainer.edge_index_adj.shape[1] == 0:
         return (node, None)
-    explainer.train(epochs=2, lr=0.001, window=500, log=False)
+    explainer.train(epochs=1500, lr=0.001, window=500, log=False)
     res = explainer.edge_mask()
     return (node, res)
 
@@ -146,12 +146,11 @@ if __name__ == '__main__':
     avg_nfgexp_explanation = torch.zeros_like(gt_grn).float()
     avg_nfgexp_touched = torch.zeros_like(gt_grn).float()
     mp_pool = Pool(processes=procs)
-    for x in samples[:int(0.025 * len(samples))]:
+    for x in samples[:int(0.05 * len(samples))]:
         nodes = list(range(X.shape[0]))
         shuffle(nodes)
         results = mp_pool.starmap(train_nfg_model, zip(repeat(device), repeat(model),
             nodes[:procs], repeat(X[:,x:x+1]), repeat(y), repeat(G), repeat(nfg_hparams)))
-        print("FINISHED FIRST RES")
         for n, res in results:
             if res is None:
                 continue
@@ -162,6 +161,8 @@ if __name__ == '__main__':
             res = groundtruth_metrics(res, gt_grn[edge_mask_hard])
             metrics_nf_grad = [m + r for m, r in zip(metrics_nf_grad, res)]
             n_samples += 1
+    mp_pool.close()
+    mp_pool.join()
     metrics_nf_grad = [m / n_samples for m in metrics_nf_grad]
     avg_nfgexp_explanation /= avg_nfgexp_touched
     print('=' * 20 + "NFG Results" + '=' * 20)
