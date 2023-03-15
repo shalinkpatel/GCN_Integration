@@ -49,10 +49,10 @@ def model(graph: jg.GraphsTuple) -> jax.Array:
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(10, with_bias=False), add_self_edges=True)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
-    gn = jg.GraphConvolution(update_node_fn=hk.Linear(100, with_bias=False), add_self_edges=True)
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(32, with_bias=False), add_self_edges=True)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
-    gn = jg.GraphConvolution(update_node_fn=hk.Linear(100, with_bias=False), add_self_edges=True)
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(32, with_bias=False), add_self_edges=True)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     nodes = graph.nodes.reshape([X.shape[1], -1])
@@ -82,6 +82,6 @@ def accuracy(params):
     return jnp.mean(jnp.argmax(decoded_nodes, axis=1) == y)
 
 # Training Loop
-for step in range(30):
+for step in range(500):
     print(f"Epoch {step} Accuracy {accuracy(params).item()}")
     params, opt_state = update(params, opt_state)
