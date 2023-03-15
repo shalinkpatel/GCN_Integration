@@ -49,7 +49,7 @@ def model(graph: jg.GraphsTuple) -> jax.Array:
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(10, with_bias=False), add_self_edges=True)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
-    gn = jg.GraphConvolution(update_node_fn=hk.Linear(32, with_bias=False), add_self_edges=True)
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(64, with_bias=False), add_self_edges=True)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(32, with_bias=False), add_self_edges=True)
@@ -67,7 +67,7 @@ def pred_loss(params):
     log_prob = jax.nn.log_softmax(predictions)
     return ox.softmax_cross_entropy_with_integer_labels(log_prob, y).sum()
 
-opt_init, opt_update = ox.adam(1e-2)
+opt_init, opt_update = ox.adam(1e-4)
 opt_state = opt_init(params)
 
 @jax.jit
