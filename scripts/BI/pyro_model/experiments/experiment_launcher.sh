@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -p batch
 #SBATCH -N 1
-#SBATCH -c 16
+#SBATCH -c 12
 #SBATCH --time 96:00:00
 #SBATCH --mem-per-cpu 16G
 #SBATCH --mail-type=ALL

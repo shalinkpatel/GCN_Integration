@@ -17,7 +17,7 @@ from torch.multiprocessing import Pool
 from os.path import exists
 from typing import Union, Tuple
 
-procs = 16
+procs = 12
 
 # Definitions
 class Model(torch.nn.Module):
