@@ -147,7 +147,7 @@ if __name__ == '__main__':
     avg_nfgexp_explanation = torch.zeros_like(gt_grn).float()
     avg_nfgexp_touched = torch.zeros_like(gt_grn).float()
     mp_pool = Pool(processes=procs)
-    for x in samples[:int(0.05 * len(samples))]:
+    for x in samples[:int(0.2 * len(samples))]:
         nodes = list(range(X.shape[0]))
         shuffle(nodes)
         start = 0
