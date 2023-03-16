@@ -56,7 +56,7 @@ for i in range(batches):
 
 # Model Definition
 def model(graph: jg.GraphsTuple) -> jax.Array:
-    gn = jg.GraphConvolution(update_node_fn=hk.Linear(8))
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(8), aggregate_nodes_fn=jg.utils.segment_mean)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(64))
