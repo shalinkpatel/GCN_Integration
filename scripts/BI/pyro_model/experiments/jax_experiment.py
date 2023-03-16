@@ -35,7 +35,7 @@ grn_s = set(
 gt_grn = jnp.array([1 if (s.item(), d.item()) in grn_s else 0 for s, d in zip(G[0, :], G[1, :])])
 
 
-batchsize = 10
+batchsize = 16
 Gs = [
     jg.GraphsTuple(
         n_node=jnp.asarray([X.shape[0]]),
@@ -51,7 +51,7 @@ shuffle(Gs)
 G_data = []
 batches = int(len(Gs)/batchsize)
 for i in range(batches):
-    G_data.append(jg.batch(Gs[i*batchsize:(i+1)*batchsize]))
+    G_data.append(jg.batch(Gs[i * batchsize:min(len(Gs), (i+1) * batchsize)]))
 
 
 # Model Definition
@@ -59,7 +59,13 @@ def model(graph: jg.GraphsTuple) -> jax.Array:
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(10), add_self_edges=True)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(32), add_self_edges=True)
+    graph = gn(graph)
+    graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(64), add_self_edges=True)
+    graph = gn(graph)
+    graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(128), add_self_edges=True)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(128), add_self_edges=True)
@@ -69,6 +75,9 @@ def model(graph: jg.GraphsTuple) -> jax.Array:
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(32), add_self_edges=True)
+    graph = gn(graph)
+    graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(16), add_self_edges=True)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     nodes = graph.nodes.reshape([batchsize, -1])
