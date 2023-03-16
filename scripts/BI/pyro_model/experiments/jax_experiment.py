@@ -35,7 +35,7 @@ grn_s = set(
 gt_grn = jnp.array([1 if (s.item(), d.item()) in grn_s else 0 for s, d in zip(G[0, :], G[1, :])])
 
 
-batchsize = 16
+batchsize = 32
 Gs = [
     jg.GraphsTuple(
         n_node=jnp.asarray([X.shape[0]]),
@@ -56,7 +56,7 @@ for i in range(batches):
 
 # Model Definition
 def model(graph: jg.GraphsTuple) -> jax.Array:
-    gn = jg.GraphConvolution(update_node_fn=hk.Linear(10))
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(8))
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(32))
@@ -65,14 +65,19 @@ def model(graph: jg.GraphsTuple) -> jax.Array:
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(128))
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
-    gn = jg.GraphConvolution(update_node_fn=hk.Linear(128))
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(256))
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
-    gn = jg.GraphConvolution(update_node_fn=hk.Linear(32))
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(64))
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
-    nodes = graph.nodes.reshape([batchsize, -1])
-    return hk.Linear(int(groups))(nodes)
+    graph = graph._replace(nodes=graph.nodes.reshape([batchsize, -1]))
+    graph = graph._replace(nodes=hk.Linear(64)(graph.nodes))
+    graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
+    graph = graph._replace(nodes=hk.Linear(32)(graph.nodes))
+    graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
+    graph = graph._replace(nodes=hk.Linear(int(groups))(graph.nodes))
+    return graph.nodes
 
 network = hk.without_apply_rng(hk.transform(model))
 params = network.init(jax.random.PRNGKey(42), G_data[0])
@@ -98,7 +103,7 @@ def accuracy(params, G):
 
 # Training Loop
 best_acc = 0
-pbar = tqdm(range(3000))
+pbar = tqdm(range(10000))
 for step in pbar:
     acc = 0
     for G in G_data:
