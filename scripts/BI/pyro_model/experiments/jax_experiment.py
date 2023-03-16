@@ -56,7 +56,7 @@ for i in range(batches):
 
 # Model Definition
 def model(graph: jg.GraphsTuple) -> jax.Array:
-    gn = jg.GraphConvolution(update_node_fn=hk.Linear(8), aggregate_nodes_fn=jg.utils.segment_mean)
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(8))
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(64))
@@ -81,7 +81,7 @@ def pred_loss(params, G):
     predictions = network.apply(params, G)
     return ox.softmax_cross_entropy_with_integer_labels(predictions, G.globals).sum()
 
-opt_init, opt_update = ox.adam(0.0001)
+opt_init, opt_update = ox.adam(0.00001)
 opt_state = opt_init(params)
 
 @jax.jit
