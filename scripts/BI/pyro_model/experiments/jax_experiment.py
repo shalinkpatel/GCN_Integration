@@ -35,7 +35,7 @@ grn_s = set(
 gt_grn = jnp.array([1 if (s.item(), d.item()) in grn_s else 0 for s, d in zip(G[0, :], G[1, :])])
 
 
-batchsize = 25
+batchsize = 10
 Gs = [
     jg.GraphsTuple(
         n_node=jnp.asarray([X.shape[0]]),
@@ -56,13 +56,19 @@ for i in range(batches):
 
 # Model Definition
 def model(graph: jg.GraphsTuple) -> jax.Array:
-    gn = jg.GraphConvolution(update_node_fn=hk.Linear(10, with_bias=False), add_self_edges=True)
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(10), add_self_edges=True)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
-    gn = jg.GraphConvolution(update_node_fn=hk.Linear(100, with_bias=False), add_self_edges=True)
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(64), add_self_edges=True)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
-    gn = jg.GraphConvolution(update_node_fn=hk.Linear(100, with_bias=False), add_self_edges=True)
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(128), add_self_edges=True)
+    graph = gn(graph)
+    graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(64), add_self_edges=True)
+    graph = gn(graph)
+    graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(32), add_self_edges=True)
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     nodes = graph.nodes.reshape([batchsize, -1])
@@ -74,10 +80,9 @@ params = network.init(jax.random.PRNGKey(42), G_data[0])
 @jax.jit
 def pred_loss(params, G):
     predictions = network.apply(params, G)
-    log_prob = jax.nn.log_softmax(predictions)
-    return ox.softmax_cross_entropy_with_integer_labels(log_prob, G.globals).sum()
+    return ox.softmax_cross_entropy_with_integer_labels(predictions, G.globals).sum()
 
-opt_init, opt_update = ox.adam(1e-4)
+opt_init, opt_update = ox.adam(0.0001)
 opt_state = opt_init(params)
 
 @jax.jit
