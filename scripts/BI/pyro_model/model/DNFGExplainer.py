@@ -44,7 +44,7 @@ class DNFGExplainer:
             optimizer.zero_grad()
             preds = self.forward()
             m = self.edge_mask()
-            loss = F.kl_div(preds, self.target, log_target=True) + 0.75 * m.mean()
+            loss = F.kl_div(preds, self.target, log_target=True) + 0.5 * m.mean()
             loss.backward(retain_graph=True)
             optimizer.step()
             self.flow_dist.clear_cache()
