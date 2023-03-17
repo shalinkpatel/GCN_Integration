@@ -116,7 +116,6 @@ for x in samples[:int(0.25 * len(samples))]:
     print(res.mean())
     print(res.max())
     print(res.min())
-    print(res)
     final_gnnexp_explanation = torch.max(final_dnfgexp_explanation, res)
     avg_dnfgexp_explanation += res
     res = groundtruth_metrics(res, gt_grn)
