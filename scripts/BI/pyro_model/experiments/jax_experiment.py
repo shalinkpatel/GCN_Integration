@@ -62,13 +62,16 @@ def model(graph: jg.GraphsTuple) -> jax.Array:
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(64))
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
+    gn = jg.GraphConvolution(update_node_fn=hk.Linear(64)) 
+    graph = gn(graph)
+    graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     gn = jg.GraphConvolution(update_node_fn=hk.Linear(64))
     graph = gn(graph)
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     graph = graph._replace(nodes=graph.nodes.reshape([batchsize, -1]))
     graph = graph._replace(nodes=hk.Linear(64)(graph.nodes))
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
-    graph = graph._replace(nodes=hk.Linear(32)(graph.nodes))
+    graph = graph._replace(nodes=hk.Linear(16)(graph.nodes))
     graph = graph._replace(nodes=jax.nn.leaky_relu(graph.nodes))
     graph = graph._replace(nodes=hk.Linear(int(groups))(graph.nodes))
     return graph.nodes
@@ -81,7 +84,7 @@ def pred_loss(params, G):
     predictions = network.apply(params, G)
     return ox.softmax_cross_entropy_with_integer_labels(predictions, G.globals).sum()
 
-opt_init, opt_update = ox.adam(0.00001)
+opt_init, opt_update = ox.adam(0.001)
 opt_state = opt_init(params)
 
 @jax.jit
