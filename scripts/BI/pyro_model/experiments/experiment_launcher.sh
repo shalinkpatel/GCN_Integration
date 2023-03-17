@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -p bigmem
 #SBATCH -N 1
-#SBATCH -c 12
+#SBATCH -c 13
 #SBATCH --time 48:00:00
 #SBATCH --mem-per-cpu 32G
 #SBATCH --mail-type=ALL

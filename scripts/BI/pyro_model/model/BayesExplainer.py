@@ -76,13 +76,6 @@ class BayesExplainer:
         # do gradient steps
         if log:
             pbar = tqdm(range(n_steps))
-            name = self.sampler.run_name()
-            path = f"{base}/runs/individual/{name}"
-            global removed
-            if exists(path) and not removed:
-                rmtree(path)
-            removed = True
-            writer = SummaryWriter(path)
         else:
             pbar = range(1, n_steps+1)
         elbos = []
@@ -104,13 +97,6 @@ class BayesExplainer:
 
             if log:
                 pbar.set_description("Loss -> %.4f" % disp)
-                if step % 100 == 0:
-                    writer.add_scalar("ELBO", elbo, step)
-                    if step >= window:
-                        writer.add_scalar("Loss", disp, step - window)
-                    ax, _ = self.visualize_subgraph()
-                    writer.add_figure("Importance Graph", ax.get_figure(), step)
-                    writer.add_histogram("Importances", self.sampler.edge_mask(self), step)
         return avgs
 
     def edge_mask(self) -> torch.Tensor:
