@@ -113,13 +113,9 @@ for x in tqdm(samples[:int(0.25 * len(samples))]):
     explainer = DNFGExplainer(model, 4, X[:,x:x+1], G, device)
     explainer.train(1000, 1e-3, True)
     res = explainer.edge_mask()
-    print(res.mean())
-    print(res.max())
-    print(res.min())
     final_gnnexp_explanation = torch.max(final_dnfgexp_explanation, res)
     avg_dnfgexp_explanation += res
     res = groundtruth_metrics(res, gt_grn)
-    print(res)
     metrics_dnf_grad = [m + r for m, r in zip(metrics_dnf_grad, res)]
     n_samples += 1
 metrics_nf_grad = [m / n_samples for m in metrics_dnf_grad]
