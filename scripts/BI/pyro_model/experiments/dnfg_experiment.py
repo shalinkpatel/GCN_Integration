@@ -110,8 +110,8 @@ avg_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
 for x in tqdm(samples[:int(0.25 * len(samples))]):
     graph += 1
     start = time.time()
-    explainer = DNFGExplainer(model, 12, X[:,x:x+1], G, device)
-    explainer.train(500, 1e-3, True)
+    explainer = DNFGExplainer(model, 4, X[:,x:x+1], G, device)
+    explainer.train(1000, 1e-3, True)
     res = explainer.edge_mask()
     print(res.mean())
     print(res.max())
