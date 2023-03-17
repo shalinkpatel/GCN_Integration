@@ -80,11 +80,9 @@ def train_nfg_model(device: torch.device, model: Model, node: int,
         G: torch.Tensor, nfg_hparams: dict) -> Tuple[int, Union[torch.Tensor, None]]:
     nfg_sampler = NFGradSampler(device=device, **nfg_hparams)
     explainer = BayesExplainer(model, nfg_sampler, node, 3, X, y, G, True, device)
-    print("Started Training")
     if explainer.edge_index_adj.shape[1] == 0:
         return (node, None)
-    explainer.train(epochs=12, lr=0.001, window=500, log=False)
-    print("Finished Training")
+    explainer.train(epochs=1250, lr=0.001, window=500, log=False)
     res = explainer.edge_mask()
     return (node, res)
 
