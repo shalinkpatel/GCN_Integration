@@ -47,7 +47,7 @@ class DNFGExplainer:
             kl = F.kl_div(preds, self.target, log_target=True)
             reg = m.mean()
             loss = kl + 1e-6*reg
-            loss.backwards(retain_graph=True)
+            loss.backward(retain_graph=True)
             optimizer.step()
             self.flow_dist.clear_cache()
 
