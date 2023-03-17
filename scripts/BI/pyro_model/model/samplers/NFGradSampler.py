@@ -128,7 +128,7 @@ class NFGradSampler(BaseSampler):
         #                 possible_set.add(edge)
         # masking = edge_mask / 1000
         # return masking
-        return post
+        return post.detach()
 
     def L(self, p):
         sample = self.flow_dist.rsample(torch.Size([250, ]))
