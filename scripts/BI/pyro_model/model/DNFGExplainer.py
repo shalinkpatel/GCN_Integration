@@ -13,11 +13,10 @@ class DNFGExplainer:
         self.X = X
         self.G = G
         self.target = self.model(self.X, self.G)
-        self.device = device
 
         self.ne = G.shape[1]
 
-        self.base_dist = dist.Normal(torch.zeros(self.ne), torch.ones(self.ne))
+        self.base_dist = dist.Normal(torch.zeros(self.ne).to(device), torch.ones(self.ne).to(device))
         self.splines = []
         self.params = []
         for _ in range(self.n_splines):
@@ -32,7 +31,7 @@ class DNFGExplainer:
         return preds
 
     def edge_mask(self):
-        return self.flow_dist.rsample(torch.Size([250, ])).sigmoid().mean(dim=0).to(self.device)
+        return self.flow_dist.rsample(torch.Size([250, ])).sigmoid().mean(dim=0)
 
     def train(self, epochs: int, lr: float, log: bool):
         optimizer = torch.optim.Adam(self.params, lr=lr)
