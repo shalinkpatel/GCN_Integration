@@ -50,6 +50,7 @@ class DNFGExplainer:
             optimizer.step()
             reg.backward()
             optimizer.step()
+            loss = kl
             self.flow_dist.clear_cache()
 
             if loss.item() < best_loss:
