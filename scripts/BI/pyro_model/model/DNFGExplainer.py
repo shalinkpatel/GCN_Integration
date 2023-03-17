@@ -45,9 +45,9 @@ class DNFGExplainer:
             preds = self.forward()
             m = self.edge_mask()
             kl = F.kl_div(preds, self.target, log_target=True)
-            reg = 1e-4 * m.mean()
+            reg = 1e-6 * m.mean()
             print(kl / reg)
-            loss = F.kl_div(preds, self.target, log_target=True) + 1e-4 * m.mean()
+            loss = F.kl_div(preds, self.target, log_target=True) + 1e-6 * m.mean()
             loss.backward(retain_graph=True)
             optimizer.step()
             self.flow_dist.clear_cache()
@@ -55,4 +55,4 @@ class DNFGExplainer:
             if loss.item() < best_loss:
                 best_loss = loss.item()
             if log:
-                pbar.set_description(f"Epoch {epoch} Best Loss {loss}")
+                pbar.set_description(f"Epoch {epoch} Best Loss {best_loss}")
