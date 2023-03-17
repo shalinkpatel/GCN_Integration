@@ -113,6 +113,10 @@ for x in samples[:int(0.1 * len(samples))]:
     explainer = DNFGExplainer(model, 12, X[:,x:x+1], G, device)
     explainer.train(500, 1e-3, True)
     res = explainer.edge_mask()
+    print(res.mean())
+    print(res.max())
+    print(res.min())
+    print(res)
     final_gnnexp_explanation = torch.max(final_dnfgexp_explanation, res)
     avg_dnfgexp_explanation += res
     res = groundtruth_metrics(res, gt_grn)
