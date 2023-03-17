@@ -85,49 +85,50 @@ class NFGradSampler(BaseSampler):
         sample = sample.clamp(0, 1)
         post = sample.mean(dim=0)
 
-        edge_mask = torch.zeros([self.ne])
-        G = to_networkx(Data(edge_index=explainer.edge_index_adj, num_nodes=explainer.edge_index_adj.max()))
-        for i in range(250):
-            nodes = set()
-            nodes.add(explainer.mapping.item())
-            possible_set = set()
-            added_edges = set()
-            visited = set()
+        # edge_mask = torch.zeros([self.ne])
+        # G = to_networkx(Data(edge_index=explainer.edge_index_adj, num_nodes=explainer.edge_index_adj.max()))
+        # for i in range(250):
+        #     nodes = set()
+        #     nodes.add(explainer.mapping.item())
+        #     possible_set = set()
+        #     added_edges = set()
+        #     visited = set()
 
-            for edge in nx.edges(G, nbunch=list(nodes)):
-                possible_set.add((edge[1], edge[0]))
-                possible_set.add((edge[0], edge[1]))
+        #     for edge in nx.edges(G, nbunch=list(nodes)):
+        #         possible_set.add((edge[1], edge[0]))
+        #         possible_set.add((edge[0], edge[1]))
 
-            while len(possible_set) != 0:
-                consideration = choice(list(possible_set))
-                possible_set.remove(consideration)
-                visited.add(consideration)
+        #     while len(possible_set) != 0:
+        #         consideration = choice(list(possible_set))
+        #         possible_set.remove(consideration)
+        #         visited.add(consideration)
 
-                start = explainer.edge_index_adj[0, :] == consideration[0]
-                end = explainer.edge_index_adj[1, :] == consideration[1]
+        #         start = explainer.edge_index_adj[0, :] == consideration[0]
+        #         end = explainer.edge_index_adj[1, :] == consideration[1]
 
-                idx_edge = (start * end).nonzero()
-                if idx_edge.numel() == 0:
-                    include = False
-                else:
-                    idx_edge = idx_edge.item()
-                    include = random() < post[idx_edge]
+        #         idx_edge = (start * end).nonzero()
+        #         if idx_edge.numel() == 0:
+        #             include = False
+        #         else:
+        #             idx_edge = idx_edge.item()
+        #             include = random() < post[idx_edge]
 
-                if include:
-                    added_edges.add(consideration)
-                    added_edges.add((consideration[1], consideration[0]))
-                    edge_mask[idx_edge] += 1
-                    nodes.add(consideration[0])
-                    nodes.add(consideration[1])
+        #         if include:
+        #             added_edges.add(consideration)
+        #             added_edges.add((consideration[1], consideration[0]))
+        #             edge_mask[idx_edge] += 1
+        #             nodes.add(consideration[0])
+        #             nodes.add(consideration[1])
 
-                for edge in nx.edges(G, nbunch=list(nodes)):
-                    rewrap = (edge[1], edge[0])
-                    if rewrap not in added_edges and rewrap not in visited:
-                        possible_set.add(rewrap)
-                    if edge not in added_edges and rewrap not in visited:
-                        possible_set.add(edge)
-        masking = edge_mask / 1000
-        return masking
+        #         for edge in nx.edges(G, nbunch=list(nodes)):
+        #             rewrap = (edge[1], edge[0])
+        #             if rewrap not in added_edges and rewrap not in visited:
+        #                 possible_set.add(rewrap)
+        #             if edge not in added_edges and rewrap not in visited:
+        #                 possible_set.add(edge)
+        # masking = edge_mask / 1000
+        # return masking
+        return post.detach()
 
     def L(self, p):
         sample = self.flow_dist.rsample(torch.Size([250, ]))
