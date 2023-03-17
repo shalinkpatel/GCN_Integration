@@ -71,27 +71,30 @@ def save_masks(name: str, grn: torch.Tensor, exp: torch.Tensor, ei: torch.Tensor
             f.write(f'{s.item()},{d.item()},{g.item()},{e.item()}\n')
 
 # Main Test
+device = torch.device('cuda')
+
 groups = 9
 X = torch.load(
     f"model/sergio/final_data/100gene-{groups}groups"
-    f"-1sparsity.pt").float()
+    f"-1sparsity.pt").float().to(device)
 y = torch.load(
     f"model/sergio/final_data/100gene-{groups}groups"
-    f"-labels.pt")
+    f"-labels.pt").to(device)
 G = torch.load(
     f"model/sergio/final_data/100gene-{groups}groups"
-    f"-1sparsity-compgraph.pt")
+    f"-1sparsity-compgraph.pt").to(device)
 grn = torch.load(
     f"model/sergio/final_data/100gene-{groups}groups"
-    f"-gt-grn.pt")
+    f"-gt-grn.pt").to(device)
 
 grn_s = set(
     [(s.cpu().item(), d.cpu().item()) for s, d in zip(chain(grn[0, :], grn[1, :]), chain(grn[1, :], grn[0, :]))])
-gt_grn = torch.tensor([1 if (s.cpu().item(), d.cpu().item()) in grn_s else 0 for s, d in zip(G[0, :], G[1, :])])
+gt_grn = torch.tensor([1 if (s.cpu().item(), d.cpu().item()) in grn_s else 0 for s, d in zip(G[0, :], G[1, :])]).to(device)
 
 model = Model(y, 100)
 print('=' * 20 + " Loading Previous Model " + '=' * 20)
 model.load_state_dict(torch.load(f"experiments/models/graph_class_{groups}groups.pt", map_location=torch.device('cpu')))
+model = model.to(device)
 
 m_names = ["accuracy", "recall", "precision", "f1_score", "auroc"]
 
@@ -107,7 +110,7 @@ avg_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
 for x in samples[:int(0.1 * len(samples))]:
     graph += 1
     start = time.time()
-    explainer = DNFGExplainer(model, 12, X[:,x:x+1], G)
+    explainer = DNFGExplainer(model, 12, X[:,x:x+1], G, device)
     explainer.train(500, 1e-3, False)
     res = explainer.edge_mask()
     final_gnnexp_explanation = torch.max(final_dnfgexp_explanation, res)

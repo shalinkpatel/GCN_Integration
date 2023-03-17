@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 
 class DNFGExplainer:
-    def __init__(self, model: torch.nn.Module, splines: int, X: torch.Tensor, G: torch.Tensor):
+    def __init__(self, model: torch.nn.Module, splines: int, X: torch.Tensor, G: torch.Tensor, device: torch.device):
         self.model = model
         self.n_splines = splines
         self.X = X
@@ -20,7 +20,7 @@ class DNFGExplainer:
         self.splines = []
         self.params = []
         for _ in range(self.n_splines):
-            self.splines.append(T.spline(self.ne))
+            self.splines.append(T.spline(self.ne).to(device))
             self.params += self.splines[-1].parameters()
         self.params = torch.nn.ParameterList(self.params)
         self.flow_dist = dist.TransformedDistribution(self.base_dist, self.splines)
