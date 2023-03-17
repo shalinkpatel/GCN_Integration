@@ -13,6 +13,7 @@ class DNFGExplainer:
         self.X = X
         self.G = G
         self.target = self.model(self.X, self.G)
+        self.device = device
 
         self.ne = G.shape[1]
 
@@ -31,7 +32,7 @@ class DNFGExplainer:
         return preds
 
     def edge_mask(self):
-        return self.flow_dist.rsample(torch.Size([250, ])).sigmoid().mean(dim=0)
+        return self.flow_dist.rsample(torch.Size([250, ])).sigmoid().mean(dim=0).to(self.device)
 
     def train(self, epochs: int, lr: float, log: bool):
         optimizer = torch.optim.Adam(self.params, lr=lr)
