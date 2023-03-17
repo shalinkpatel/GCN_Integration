@@ -111,7 +111,7 @@ for x in samples[:int(0.1 * len(samples))]:
     graph += 1
     start = time.time()
     explainer = DNFGExplainer(model, 12, X[:,x:x+1], G, device)
-    explainer.train(500, 1e-3, False)
+    explainer.train(500, 1e-3, True)
     res = explainer.edge_mask()
     final_gnnexp_explanation = torch.max(final_dnfgexp_explanation, res)
     avg_dnfgexp_explanation += res
