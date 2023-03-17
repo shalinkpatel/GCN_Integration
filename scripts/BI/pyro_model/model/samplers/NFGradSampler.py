@@ -80,7 +80,7 @@ class NFGradSampler(BaseSampler):
         _ = pyro.sample("y_hat", dist.Categorical(probs=mean))
 
     def edge_mask(self, explainer):
-        sample = self.flow_dist.rsample(torch.Size([25000, ]))
+        sample = self.flow_dist.rsample(torch.Size([250, ]))
         sample = sample.sigmoid() if self.sigmoid else sample
         sample = sample.clamp(0, 1)
         post = sample.mean(dim=0)
