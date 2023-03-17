@@ -11,7 +11,7 @@ plt.rcParams['savefig.dpi'] = 300
 import networkx as nx
 import pyro
 import torch
-from torch.utils.tensorboard import SummaryWriter
+
 from pyro.optim import Adam
 from pyro.infer import SVI
 from torch_geometric.data import Data
