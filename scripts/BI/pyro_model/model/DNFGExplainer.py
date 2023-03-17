@@ -31,7 +31,7 @@ class DNFGExplainer:
         return preds
 
     def edge_mask(self):
-        return self.flow_dist.rsample(torch.Size([250, ])).sigmoid().mean(dim=0)
+        return self.flow_dist.sample(torch.Size([250, ])).sigmoid().mean(dim=0)
 
     def train(self, epochs: int, lr: float, log: bool):
         optimizer = torch.optim.Adam(self.params, lr=lr)
@@ -44,7 +44,7 @@ class DNFGExplainer:
             optimizer.zero_grad()
             preds = self.forward()
             m = self.edge_mask()
-            loss = F.kl_div(preds, self.target, log_target=True) + m.mean()
+            loss = F.kl_div(preds, self.target, log_target=True) + 0.5 * m.mean()
             loss.backward(retain_graph=True)
             optimizer.step()
             self.flow_dist.clear_cache()
