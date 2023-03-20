@@ -125,7 +125,6 @@ for x in samples[:int(0.5 * len(samples))]:
     metrics_dnf_grad = [m + r for m, r in zip(metrics_dnf_grad, res)]
     n_samples += 1
     gpu_usage()
-    torch.cuda.empty_cache()
 metrics_nf_grad = [m / n_samples for m in metrics_dnf_grad]
 avg_dnfgexp_explanation /= n_samples
 print('=' * 20 + " DNFG Results " + '=' * 20)
