@@ -18,11 +18,11 @@ class DNFGExplainer:
 
         self.base_dist = dist.Normal(torch.zeros(self.ne).to(device), torch.ones(self.ne).to(device))
         self.splines = []
-        self.params = []
+        self.params_l = []
         for _ in range(self.n_splines):
             self.splines.append(T.spline(self.ne).to(device))
-            self.params += self.splines[-1].parameters()
-        self.params = torch.nn.ParameterList(self.params)
+            self.params_l += self.splines[-1].parameters()
+        self.params = torch.nn.ParameterList(self.params_l)
         self.flow_dist = dist.TransformedDistribution(self.base_dist, self.splines)
 
     def forward(self):
@@ -55,3 +55,18 @@ class DNFGExplainer:
                 best_loss = loss.item()
             if log:
                 pbar.set_description(f"Epoch {epoch} Best Loss {best_loss}")
+
+    def clean(self):
+        cpu = torch.device('cpu')
+        self.base_dist.to(cpu)
+        for spl in self.splines:
+            spl.to(cpu)
+        for p in self.params_l:
+            p.to(cpu)
+        self.params.to(cpu)
+
+        del self.base_dist
+        del self.splines
+        del self.params_l
+        del self.params
+        del self.flow_dist

@@ -116,6 +116,8 @@ for x in samples[:int(0.1 * len(samples))]:
     explainer.train(1000, 1e-3, False)
     print(f"Time for graph {graph}: {time.time() - start}")
     res = explainer.edge_mask()
+    explainer.clean()
+    del explainer
     final_gnnexp_explanation = torch.max(final_dnfgexp_explanation, res)
     avg_dnfgexp_explanation += res
     res = groundtruth_metrics(res, gt_grn)
