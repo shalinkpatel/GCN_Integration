@@ -58,7 +58,6 @@ class DNFGExplainer:
 
     def clean(self):
         cpu = torch.device('cpu')
-        self.base_dist.to(cpu)
         for spl in self.splines:
             spl.to(cpu)
         for p in self.params_l:
