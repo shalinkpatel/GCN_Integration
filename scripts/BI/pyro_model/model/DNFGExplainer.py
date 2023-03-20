@@ -42,7 +42,7 @@ class DNFGExplainer:
         for epoch in pbar:
             optimizer.zero_grad()
             m = self.edge_mask()
-            preds = self.forward(self.model, self.X, self.G, m)
+            preds = self.forward(self.model, self.X.detach(), self.G.detach(), m)
             kl = F.kl_div(preds, self.target, log_target=True)
             reg = m.mean()
             loss = kl + 0.1*reg
