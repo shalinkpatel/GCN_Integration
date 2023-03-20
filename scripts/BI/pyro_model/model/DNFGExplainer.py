@@ -60,12 +60,12 @@ class DNFGExplainer:
     def clean(self):
         cpu = torch.device('cpu')
         for spl in self.splines:
-            spl.to(cpu)
+            spl = spl.to(cpu)
         for p in self.params_l:
-            p.to(cpu)
-        self.params.to(cpu)
-        self.X.to(cpu)
-        self.G.to(cpu)
+            p = p.to(cpu)
+        self.params = self.params.to(cpu)
+        self.X = self.X.to(cpu)
+        self.G = self.G.to(cpu)
 
         del self.base_dist
         del self.splines
