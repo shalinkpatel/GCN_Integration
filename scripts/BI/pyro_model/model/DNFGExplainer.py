@@ -12,7 +12,8 @@ class DNFGExplainer:
         self.n_splines = splines
         self.X = X
         self.G = G
-        self.target = self.model(self.X, self.G)
+        with torch.no_grad():
+            self.target = self.model(self.X, self.G)
 
         self.ne = G.shape[1]
 
