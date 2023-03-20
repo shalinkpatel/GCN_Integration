@@ -27,8 +27,8 @@ class DNFGExplainer:
 
     def forward(self):
         m = self.edge_mask()
-        preds = self.model(self.X, self.G, edge_weight=m)
-        return preds, m.detach()
+        preds = self.model(self.X.detach(), self.G.detach(), edge_weight=m)
+        return preds, m
 
     def edge_mask(self):
         return self.flow_dist.rsample(torch.Size([100, ])).sigmoid().mean(dim=0)
