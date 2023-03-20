@@ -44,14 +44,12 @@ class DNFGExplainer:
             optimizer.zero_grad()
             preds, m = self.forward()
             kl = F.kl_div(preds, self.target, log_target=True)
-            reg = m.mean()
-            loss = kl + 0.1*reg
+            #reg = m.mean()
+            loss = kl + #0.1*reg
             loss_val = loss.detach().cpu().item()
             loss.backward()
             optimizer.step()
             self.flow_dist.clear_cache()
-            for params in self.params:
-                params.data = params.data.detach()
 
             if loss_val < best_loss:
                 best_loss = loss_val
