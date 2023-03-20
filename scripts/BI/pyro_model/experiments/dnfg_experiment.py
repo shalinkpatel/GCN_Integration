@@ -113,7 +113,8 @@ for x in samples[:int(0.5 * len(samples))]:
     graph += 1
     start = time.time()
     explainer = DNFGExplainer(model, 4, X[:,x:x+1], G, device)
-    explainer.train(1000, 1e-3, True)
+    explainer.train(1000, 1e-3, False)
+    print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask()
     explainer.clean()
     del explainer
@@ -127,7 +128,7 @@ for x in samples[:int(0.5 * len(samples))]:
     torch.cuda.empty_cache()
 metrics_nf_grad = [m / n_samples for m in metrics_dnf_grad]
 avg_dnfgexp_explanation /= n_samples
-print('=' * 20 + " NFG Results " + '=' * 20)
+print('=' * 20 + " DNFG Results " + '=' * 20)
 print({n: v for n, v in zip(m_names, metrics_nf_grad)})
 print({n: v for n, v in zip(m_names, groundtruth_metrics(final_dnfgexp_explanation, gt_grn))})
 print({n: v for n, v in zip(m_names, groundtruth_metrics(avg_dnfgexp_explanation, gt_grn))})
