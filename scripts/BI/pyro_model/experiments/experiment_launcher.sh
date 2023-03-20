@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH -p bigmem
+#SBATCH -p batch
 #SBATCH -N 1
-#SBATCH -c 13
-#SBATCH --time 48:00:00
-#SBATCH --mem-per-cpu 32G
+#SBATCH -c 9
+#SBATCH --time 96:00:00
+#SBATCH --mem-per-cpu 16G
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=shalin_patel@brown.edu
 
@@ -14,4 +14,4 @@ shift
 
 source ~/ml/bin/activate
 export PYTHONPATH="$PYTHONPATH:$pwd"
-python3 -u $experiment $@
+python3 -u -W ignore $experiment $@

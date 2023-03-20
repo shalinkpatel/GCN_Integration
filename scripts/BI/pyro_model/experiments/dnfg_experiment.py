@@ -15,6 +15,8 @@ from torch_geometric.utils import k_hop_subgraph
 from os.path import exists
 from typing import Union, Tuple
 
+from GPUtil import showUtilization as gpu_usage
+
 # Definitions
 class Model(torch.nn.Module):
     def __init__(self, y, N, x=64):
@@ -107,17 +109,20 @@ n_samples = 0
 graph = 0
 final_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
 avg_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
-for x in tqdm(samples[:int(0.25 * len(samples))]):
+for x in samples[:int(0.1 * len(samples))]:
     graph += 1
     start = time.time()
-    explainer = DNFGExplainer(model, 4, X[:,x:x+1], G, device)
-    explainer.train(1000, 1e-3, True)
+    explainer = DNFGExplainer(model, 6, X[:,x:x+1], G, device)
+    explainer.train(1000, 1e-3, False)
+    print(f"Time for graph {graph}: {time.time() - start}")
     res = explainer.edge_mask()
     final_gnnexp_explanation = torch.max(final_dnfgexp_explanation, res)
     avg_dnfgexp_explanation += res
     res = groundtruth_metrics(res, gt_grn)
     metrics_dnf_grad = [m + r for m, r in zip(metrics_dnf_grad, res)]
     n_samples += 1
+    gpu_usage()
+    torch.cuda.empty_cache()
 metrics_nf_grad = [m / n_samples for m in metrics_dnf_grad]
 avg_dnfgexp_explanation /= n_samples
 print('=' * 20 + " NFG Results " + '=' * 20)
