@@ -17,6 +17,8 @@ from typing import Union, Tuple
 
 from GPUtil import showUtilization as gpu_usage
 
+torch.autograd.set_detect_anomaly(True)
+
 # Definitions
 class Model(torch.nn.Module):
     def __init__(self, y, N, x=64):
