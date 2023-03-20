@@ -64,9 +64,13 @@ class DNFGExplainer:
         for p in self.params_l:
             p.to(cpu)
         self.params.to(cpu)
+        self.X.to(cpu)
+        self.G.to(cpu)
 
         del self.base_dist
         del self.splines
         del self.params_l
         del self.params
         del self.flow_dist
+        del self.X
+        del self.G
