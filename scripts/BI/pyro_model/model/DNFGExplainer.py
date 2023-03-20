@@ -28,7 +28,7 @@ class DNFGExplainer:
     def forward(self):
         m = self.edge_mask()
         preds = self.model(self.X, self.G, edge_weight=m)
-        return preds
+        return preds, m
 
     def edge_mask(self):
         return self.flow_dist.rsample(torch.Size([100, ])).sigmoid().mean(dim=0)
@@ -42,8 +42,7 @@ class DNFGExplainer:
         best_loss = 1e20
         for epoch in pbar:
             optimizer.zero_grad()
-            preds = self.forward()
-            m = self.edge_mask()
+            preds, m = self.forward()
             kl = F.kl_div(preds, self.target, log_target=True)
             reg = m.mean()
             loss = kl + 0.1*reg
@@ -52,7 +51,7 @@ class DNFGExplainer:
             optimizer.step()
             self.flow_dist.clear_cache()
             for params in self.params:
-                params = params.deatch()
+                params.data = params.data.deatch()
 
             if loss_val < best_loss:
                 best_loss = loss_val
