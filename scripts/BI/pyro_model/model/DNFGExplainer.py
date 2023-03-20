@@ -45,7 +45,7 @@ class DNFGExplainer:
             preds, m = self.forward()
             kl = F.kl_div(preds, self.target, log_target=True)
             #reg = m.mean()
-            loss = kl + #0.1*reg
+            loss = kl #+ 0.1*reg
             loss_val = loss.detach().cpu().item()
             loss.backward()
             optimizer.step()
