@@ -25,10 +25,9 @@ class DNFGExplainer:
         self.params = torch.nn.ParameterList(self.params_l)
         self.flow_dist = dist.TransformedDistribution(self.base_dist, self.splines)
 
-    def forward(self, X, G):
-        m = self.edge_mask()
-        preds = self.model(X, G, edge_weight=m)
-        return preds, m
+    def forward(self, model, X, G, m):
+        preds = model(X, G, edge_weight=m)
+        return preds
 
     def edge_mask(self):
         return self.flow_dist.rsample(torch.Size([100, ])).sigmoid().mean(dim=0)
@@ -42,7 +41,8 @@ class DNFGExplainer:
         best_loss = 1e20
         for epoch in pbar:
             optimizer.zero_grad()
-            preds, m = self.forward(self.X, self.G)
+            m = self.edge_mask()
+            preds = self.forward(self.model, self.X, self.G, m)
             kl = F.kl_div(preds, self.target, log_target=True)
             reg = m.mean()
             loss = kl + 0.1*reg
