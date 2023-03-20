@@ -51,7 +51,7 @@ class DNFGExplainer:
             optimizer.step()
             self.flow_dist.clear_cache()
             for params in self.params:
-                params.data = params.data.deatch()
+                params.data = params.data.detach()
 
             if loss_val < best_loss:
                 best_loss = loss_val
