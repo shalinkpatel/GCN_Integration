@@ -17,6 +17,9 @@ from typing import Union, Tuple
 
 from GPUtil import showUtilization as gpu_usage
 
+torch.cuda.memory._record_memory_history(True)
+import pickle
+
 # Definitions
 class Model(torch.nn.Module):
     def __init__(self, y, N, x=64):
@@ -125,6 +128,8 @@ for x in samples[:int(1 * len(samples))]:
     metrics_dnf_grad = [m + r for m, r in zip(metrics_dnf_grad, res)]
     n_samples += 1
     gpu_usage()
+    snapshot = torch.cuda.memory._snapshot()
+    pickle.dump(snapshot, open('memshot.pickle', 'wb'))
 metrics_nf_grad = [m / n_samples for m in metrics_dnf_grad]
 avg_dnfgexp_explanation /= n_samples
 print('=' * 20 + " DNFG Results " + '=' * 20)
