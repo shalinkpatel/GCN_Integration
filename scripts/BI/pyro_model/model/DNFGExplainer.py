@@ -33,14 +33,10 @@ class DNFGExplainer:
     def edge_mask(self):
         return self.flow_dist.rsample(torch.Size([100, ])).sigmoid().mean(dim=0)
 
-    def train(self, epochs: int, lr: float, log: bool):
+    def train(self, epochs: int, lr: float):
         optimizer = torch.optim.Adam(self.params, lr=lr)
-        pbar = range(epochs)
-        if log:
-            pbar = tqdm(pbar)
-
         best_loss = 1e20
-        for epoch in pbar:
+        for epoch in range(epochs):
             optimizer.zero_grad()
             m = self.edge_mask()
             preds = self.forward(self.model, self.X.detach(), self.G.detach(), m)
@@ -54,8 +50,6 @@ class DNFGExplainer:
 
             if loss_val < best_loss:
                 best_loss = loss_val
-            if log:
-                pbar.set_description(f"Epoch {epoch} Best Loss {best_loss}")
 
     def clean(self):
         cpu = torch.device('cpu')

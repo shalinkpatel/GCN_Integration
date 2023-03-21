@@ -113,7 +113,7 @@ for x in samples[:int(1 * len(samples))]:
     graph += 1
     start = time.time()
     explainer = DNFGExplainer(model, 4, X[:,x:x+1], G, device)
-    explainer.train(1000, 1e-3, False)
+    explainer.train(1000, 1e-3)
     print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
     explainer.clean()
