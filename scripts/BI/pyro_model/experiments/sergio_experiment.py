@@ -135,7 +135,7 @@ if __name__ == '__main__':
     metrics_nf_grad = [0, 0, 0, 0, 0]
     nfg_hparams = {
         "name": "normalizing_flows_grad",
-        "splines": 6,
+        "splines": 12,
         "sigmoid": True,
         "lambd": 5.0,
         "p": 1.2,
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     avg_nfgexp_explanation = torch.zeros_like(gt_grn).float()
     avg_nfgexp_touched = torch.zeros_like(gt_grn).float()
     mp_pool = Pool(processes=procs)
-    for x in samples[:int(0.05 * len(samples))]:
+    for x in samples[:int(0.15 * len(samples))]:
         graph += 1
         nodes = list(range(X.shape[0]))
         shuffle(nodes)
