@@ -116,7 +116,10 @@ for x in samples[:int(1 * len(samples))]:
     explainer_mask = explainer.edge_mask().detach()
     explainer.clean()
     del explainer
-    final_gnnexp_explanation = torch.max(final_dnfgexp_explanation, explainer_mask)
+    if torch.isnan(explainer_mask).sum() == explainer_mask.shape[0]:
+        del explainer_mask
+        continue
+    final_dnfgexp_explanation = torch.max(final_dnfgexp_explanation, explainer_mask)
     avg_dnfgexp_explanation += explainer_mask
     res = groundtruth_metrics(explainer_mask, gt_grn)
     del explainer_mask
