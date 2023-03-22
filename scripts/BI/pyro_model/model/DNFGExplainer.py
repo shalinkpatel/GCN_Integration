@@ -17,7 +17,7 @@ class DNFGExplainer:
 
         self.ne = G.shape[1]
 
-        self.base_dist = dist.Normal(torch.zeros(self.ne).to(device), torch.ones(self.ne).to(device))
+        self.base_dist = dist.Beta(0.95 * torch.ones(self.ne).to(device), 0.95 * torch.ones(self.ne).to(device))
         self.splines = []
         self.params_l = []
         for _ in range(self.n_splines):
