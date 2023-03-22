@@ -27,7 +27,7 @@ class DNFGExplainer:
         self.flow_dist = dist.TransformedDistribution(self.base_dist, self.splines)
 
     def forward(self):
-        m = self.flow_dist.rsample(torch.Size([250, ])).sigmoid().mean(dim=0)
+        m = self.flow_dist.rsample().sigmoid()
         preds = self.model(self.X, self.G, edge_weight=m)
         return preds, m
 
