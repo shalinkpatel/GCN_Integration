@@ -36,20 +36,15 @@ class DNFGExplainer:
 
     def train(self, epochs: int, lr: float):
         optimizer = torch.optim.Adam(self.params, lr=lr)
-        best_loss = 1e20
         for epoch in range(epochs):
             optimizer.zero_grad()
             preds, m = self.forward()
             kl = F.kl_div(preds, self.target, log_target=True)
             reg = m.mean()
-            loss = kl + 0.001*reg
-            loss_val = loss.detach().cpu().item()
+            loss = kl + 0.01*reg
             loss.backward()
             optimizer.step()
             self.flow_dist.clear_cache()
-
-            if loss_val < best_loss:
-                best_loss = loss_val
 
     def clean(self):
         cpu = torch.device('cpu')
