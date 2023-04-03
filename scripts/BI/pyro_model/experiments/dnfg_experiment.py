@@ -2,18 +2,13 @@ from model.DNFGExplainer import DNFGExplainer
 
 import torch
 import torch.nn.functional as F
-from tqdm import tqdm
-from itertools import chain, repeat
+from itertools import chain
 from random import shuffle
-import sys
 import time
 
 from torch_geometric.nn import GCNConv
 from torch_geometric.explain.metric.basic import groundtruth_metrics
-from torch_geometric.utils import k_hop_subgraph
 
-from os.path import exists
-from typing import Union, Tuple
 
 # Definitions
 class Model(torch.nn.Module):
@@ -24,13 +19,14 @@ class Model(torch.nn.Module):
         self.conv3 = GCNConv(x, x)
         self.fc = torch.nn.Linear(x * N, max(y).tolist() + 1)
 
-    def forward(self, x, edge_index, edge_weight = None):
-        if edge_weight == None:
-            edge_weight = torch.ones_like(edge_index[0,:]).float()
+    def forward(self, x, edge_index, edge_weight=None):
+        if edge_weight is None:
+            edge_weight = torch.ones_like(edge_index[0, :]).float()
         x = F.leaky_relu(self.conv1(x, edge_index, edge_weight))
         x = F.leaky_relu(self.conv2(x, edge_index, edge_weight))
         x = F.leaky_relu(self.conv3(x, edge_index, edge_weight))
         return self.fc(x.flatten()).log_softmax(dim=0)
+
 
 def train_model(model, X, y, edge_index, device):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
@@ -64,11 +60,13 @@ def train_model(model, X, y, edge_index, device):
     print('=' * 20 + ' Ended Training ' + '=' * 20)
     return best_weights
 
+
 def save_masks(name: str, grn: torch.Tensor, exp: torch.Tensor, ei: torch.Tensor):
     with open(f'experiments/masks/{name}_{groups}.csv', 'w') as f:
         f.write('s,d,grn,exp\n')
         for s, d, g, e in zip(ei[0, :], ei[1, :], grn, exp):
             f.write(f'{s.item()},{d.item()},{g.item()},{e.item()}\n')
+
 
 # Main Test
 device = torch.device('cuda')
@@ -110,7 +108,7 @@ avg_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
 for x in samples[:int(0.5 * len(samples))]:
     graph += 1
     start = time.time()
-    explainer = DNFGExplainer(model, 16, X[:,x:x+1], G, device)
+    explainer = DNFGExplainer(model, 16, X[:, x:x+1], G, device)
     explainer.train(1000, 1e-3)
     print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
