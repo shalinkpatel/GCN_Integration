@@ -1,9 +1,7 @@
-import pyro
 import torch
 import torch.nn.functional as F
 import pyro.distributions as dist
 import pyro.distributions.transforms as T
-from tqdm import tqdm
 
 
 class DNFGExplainer:
