@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 import pyro.distributions as dist
 import pyro.distributions.transforms as T
+from torch_geometric.explain.algorithm.utils import clear_masks, set_masks
 
 
 class DNFGExplainer:
@@ -26,7 +27,8 @@ class DNFGExplainer:
 
     def forward(self):
         m = self.flow_dist.rsample().sigmoid()
-        preds = self.model(self.X, self.G, edge_weight=m)
+        set_masks(self.model, m, self.G)
+        preds = self.model(self.X, self.G)
         return preds, m
 
     def edge_mask(self):
@@ -39,10 +41,11 @@ class DNFGExplainer:
             preds, m = self.forward()
             kl = F.kl_div(preds, self.target, log_target=True)
             reg = m.mean()
-            loss = kl + 0.1*reg
+            loss = kl + 0.1 * reg
             loss.backward()
             optimizer.step()
             self.flow_dist.clear_cache()
+        clear_masks(self.model)
 
     def clean(self):
         cpu = torch.device('cpu')
