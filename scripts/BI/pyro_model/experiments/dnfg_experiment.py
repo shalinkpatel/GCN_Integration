@@ -105,11 +105,11 @@ n_samples = 0
 graph = 0
 final_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
 avg_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
-for x in samples[:int(0.5 * len(samples))]:
+for x in samples[:int(0.75 * len(samples))]:
     graph += 1
     start = time.time()
-    explainer = DNFGExplainer(model, 16, X[:, x:x + 1], G, device)
-    explainer.train(1000, 1e-3)
+    explainer = DNFGExplainer(model, 32, X[:,x:x+1], G, device)
+    explainer.train(750, 1e-3)
     print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
     explainer.clean()
