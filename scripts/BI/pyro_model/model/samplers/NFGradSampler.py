@@ -46,7 +46,7 @@ class NFGradSampler(BaseSampler):
             new_mask = torch.ones_like(explainer.edge_mask_hard).float().to(self.device)
             new_mask[explainer.edge_mask_hard] = m_sub
             m_sub = new_mask
-        set_masks(explainer.model, torch.nn.Parameter(m_sub), explainer.final_ei, False)
+        set_masks(explainer.model, m_sub, explainer.final_ei, False)
         if explainer.mixed_mode:
             mean = explainer.model(X, explainer.final_ei).reshape(-1).exp()
         else:
@@ -70,7 +70,7 @@ class NFGradSampler(BaseSampler):
             new_mask = torch.ones_like(explainer.edge_mask_hard).float().to(self.device)
             new_mask[explainer.edge_mask_hard] = m_sub
             m_sub = new_mask
-        set_masks(explainer.model, torch.nn.Parameter(m_sub), explainer.final_ei, False)
+        set_masks(explainer.model, m_sub, explainer.final_ei, False)
         if explainer.mixed_mode:
             mean = explainer.model(X, explainer.final_ei).reshape(-1).exp()
         else:
