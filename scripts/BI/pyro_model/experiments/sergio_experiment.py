@@ -89,7 +89,7 @@ def train_nfg_model(device: torch.device, model: Model, node: int,
 if __name__ == '__main__':
     # Loading Data
     groups = sys.argv[1]
-    device = torch.device('cpu')
+    device = torch.device('cuda')
 
     X = torch.load(
         f"model/sergio/final_data/100gene-{groups}groups"
