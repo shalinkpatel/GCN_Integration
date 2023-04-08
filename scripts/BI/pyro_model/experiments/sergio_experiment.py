@@ -40,22 +40,25 @@ def train_model(model, X, y, edge_index, device):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     best_acc = 0
     print('=' * 20 + ' Started Training ' + '=' * 20)
-    pbar = range(3000)
+    pbar = range(100)
     best_weights = None
     for epoch in pbar:
         # Training step
         model.train()
         loss_ep = 0
         correct = 0
+        avg_max = 0
         for n in range(y.shape[0]):
             optimizer.zero_grad()
             log_logits = model(X[:, n:n + 1], edge_index)
             loss = F.cross_entropy(log_logits, y[n])
             loss += log_logits.exp().pow(2).sum()
+            avg_max += log_logits.exp().max().item()
             loss_ep += loss
             loss.backward()
             optimizer.step()
             correct += (torch.argmax(log_logits) == y[n].item()).float().item()
+        avg_max /= y.shape[0]
 
         # Testing step
         model.eval()
@@ -64,7 +67,7 @@ def train_model(model, X, y, edge_index, device):
             model.to(torch.device('cpu'))
             best_weights = model.state_dict()
             model.to(device)
-        print(f"Epoch {epoch} | Best Acc = {best_acc} | Loss = {loss_ep}")
+        print(f"Epoch {epoch} | Best Acc = {best_acc} | Loss = {loss_ep} | Avg Max = {avg_max}")
     print('=' * 20 + ' Ended Training ' + '=' * 20)
     return best_weights
 
