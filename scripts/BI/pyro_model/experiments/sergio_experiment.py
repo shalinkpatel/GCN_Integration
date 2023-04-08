@@ -50,8 +50,8 @@ def train_model(model, X, y, edge_index, device):
         for n in range(y.shape[0]):
             optimizer.zero_grad()
             log_logits = model(X[:, n:n + 1], edge_index)
-            print(log_logits.exp())
             loss = F.cross_entropy(log_logits, y[n])
+            loss += log_logits.exp().pow(2).sum()
             loss_ep += loss
             loss.backward()
             optimizer.step()
