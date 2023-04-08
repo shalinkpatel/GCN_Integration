@@ -17,6 +17,7 @@ from torch.multiprocessing import Pool
 
 from os.path import exists
 from typing import Union, Tuple
+from copy import deepcopy
 
 procs = 8
 
@@ -65,8 +66,9 @@ def train_model(model, X, y, edge_index, device):
         best_acc = correct / y.shape[0] if (correct / y.shape[0]) > best_acc else best_acc
         if best_acc == correct / y.shape[0]:
             model.to(torch.device('cpu'))
-            best_weights = model.state_dict()
+            best_weights = deepcopy(model.state_dict())
             model.to(device)
+            print("Saved Weights!")
         print(f"Epoch {epoch} | Best Acc = {best_acc} | Loss = {loss_ep} | Avg Max = {avg_max}")
     print('=' * 20 + ' Ended Training ' + '=' * 20)
     return best_weights

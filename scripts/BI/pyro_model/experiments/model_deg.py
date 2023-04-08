@@ -59,6 +59,7 @@ for i in range(11):
     correct = 0
     for n in range(y.shape[0]):
         log_logits = model(X[:, n:n + 1], G)
+        print(log_logits)
         correct += (torch.argmax(log_logits) == y[n].item()).float().item()
     acc = correct / y.shape[0]
     df.loc[len(df.index)] = (i / 10, acc)
