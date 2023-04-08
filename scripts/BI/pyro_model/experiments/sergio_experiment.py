@@ -33,7 +33,7 @@ class Model(torch.nn.Module):
         x = F.leaky_relu(self.conv1(x, edge_index))
         x = F.leaky_relu(self.conv2(x, edge_index))
         x = F.leaky_relu(self.conv3(x, edge_index))
-        return self.fc(x.flatten()).softmax(dim=0)
+        return self.fc(x.flatten()).log_softmax(dim=0)
 
 
 def train_model(model, X, y, edge_index, device):
