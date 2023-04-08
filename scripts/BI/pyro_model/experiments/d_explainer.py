@@ -109,7 +109,7 @@ for x in samples[:int(0.75 * len(samples))]:
     graph += 1
     start = time.time()
     explainer = BetaExplainer(model, X[:,x:x+1], G, device)
-    explainer.train(10000, 0.05)
+    explainer.train(10000, 0.1)
     print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
     print(explainer_mask)
