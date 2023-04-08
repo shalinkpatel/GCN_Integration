@@ -29,7 +29,7 @@ class NFGradSampler(BaseSampler):
         self.base_dist = dist.Normal(torch.zeros(N).to(self.device), torch.ones(N).to(self.device))
         self.splines = []
         for _ in range(self.splines_n):
-            self.splines.append(T.spline(N).to(self.device))
+            self.splines.append(T.spline_coupling(N).to(self.device))
         self.flow_dist = dist.TransformedDistribution(self.base_dist, self.splines)
 
     def sample_model(self, X, y, explainer):

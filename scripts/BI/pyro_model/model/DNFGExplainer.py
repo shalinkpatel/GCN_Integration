@@ -20,7 +20,7 @@ class DNFGExplainer:
         self.splines = []
         self.params_l = []
         for _ in range(self.n_splines):
-            self.splines.append(T.spline(self.ne).to(device))
+            self.splines.append(T.spline_coupling(self.ne).to(device))
             self.params_l += self.splines[-1].parameters()
         self.params = torch.nn.ParameterList(self.params_l)
         self.flow_dist = dist.TransformedDistribution(self.base_dist, self.splines)
