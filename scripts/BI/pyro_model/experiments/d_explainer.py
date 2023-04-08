@@ -96,7 +96,7 @@ model = model.to(device)
 
 m_names = ["accuracy", "recall", "precision", "f1_score", "auroc"]
 
-# DNFGSampler
+# BetaSampler
 print('=' * 20 + " Beta Explainer " + '=' * 20)
 metrics_dnf_grad = [0, 0, 0, 0, 0]
 samples = list(range(y.shape[0]))

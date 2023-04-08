@@ -20,8 +20,8 @@ class BetaExplainer:
         self.device = device
 
     def model_p(self, ys):
-        alpha = 0.95 * torch.ones(self.ne).to(self.device)
-        beta = 0.95 * torch.ones(self.ne).to(self.device)
+        alpha = 2.0 * torch.ones(self.ne).to(self.device)
+        beta = 6.0 * torch.ones(self.ne).to(self.device)
         m = pyro.sample("mask", dist.Beta(alpha, beta).to_event(1))
         set_masks(self.model, m, self.G, False)
         preds = self.model(self.X, self.G).exp()
@@ -29,8 +29,8 @@ class BetaExplainer:
             pyro.sample("obs", dist.Categorical(preds), obs=ys)
 
     def guide(self, ys):
-        alpha = pyro.param("alpha_q", torch.ones(self.ne).to(self.device), constraint=constraints.positive)
-        beta = pyro.param("beta_q", torch.ones(self.ne).to(self.device), constraint=constraints.positive)
+        alpha = pyro.param("alpha_q", 2.0 * torch.ones(self.ne).to(self.device), constraint=constraints.positive)
+        beta = pyro.param("beta_q", 6.0 * torch.ones(self.ne).to(self.device), constraint=constraints.positive)
         pyro.sample("mask", dist.Beta(alpha, beta).to_event(1))
 
     def train(self, epochs: int, lr: float = 0.0005):
