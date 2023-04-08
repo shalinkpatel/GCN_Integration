@@ -69,7 +69,7 @@ def save_masks(name: str, grn: torch.Tensor, exp: torch.Tensor, ei: torch.Tensor
 
 
 # Main Test
-device = torch.device('cpu')
+device = torch.device('cuda')
 
 groups = 9
 X = torch.load(

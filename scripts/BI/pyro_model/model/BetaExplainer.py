@@ -24,7 +24,7 @@ class BetaExplainer:
         beta = 0.95 * torch.ones(self.ne).to(self.device)
         m = pyro.sample("mask", dist.Beta(alpha, beta).to_event(1))
         set_masks(self.model, m, self.G, False)
-        preds = self.model(self.X, self.G)
+        preds = self.model(self.X, self.G).exp()
         with pyro.plate("data_loop"):
             pyro.sample("obs", dist.Categorical(preds), obs=ys)
 
@@ -37,9 +37,9 @@ class BetaExplainer:
         adam_params = {"lr": lr, "betas": (0.90, 0.999)}
         optimizer = Adam(adam_params)
         svi = SVI(self.model_p, self.guide, optimizer, loss=Trace_ELBO())
-        ys = torch.distributions.categorical.Categorical(self.target).sample(torch.Size([self.obs]))
 
         for _ in range(epochs):
+            ys = torch.distributions.categorical.Categorical(self.target.exp()).sample(torch.Size([self.obs]))
             svi.step(ys)
 
         clear_masks(self.model)
