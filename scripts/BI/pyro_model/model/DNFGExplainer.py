@@ -27,7 +27,7 @@ class DNFGExplainer:
 
     def forward(self):
         m = self.flow_dist.rsample().sigmoid()
-        set_masks(self.model, m, self.G)
+        set_masks(self.model, m, self.G, False)
         preds = self.model(self.X, self.G)
         return preds, m
 
