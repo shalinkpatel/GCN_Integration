@@ -50,6 +50,7 @@ def train_model(model, X, y, edge_index, device):
         for n in range(y.shape[0]):
             optimizer.zero_grad()
             log_logits = model(X[:, n:n + 1], edge_index)
+            print(log_logits.exp())
             loss = F.cross_entropy(log_logits, y[n])
             loss_ep += loss
             loss.backward()
@@ -118,14 +119,14 @@ if __name__ == '__main__':
 
 
     # Model Training
-    if exists(f"experiments/models/graph_class_{groups}groups.pt"):
-        print('=' * 20 + " Loading Previous Model " + '=' * 20)
-        model.load_state_dict(torch.load(f"experiments/models/graph_class_{groups}groups.pt", map_location=torch.device('cpu')))
-        model.to(device)
-    else:
-        print('=' * 20 + " Training Model " + '=' * 20)
-        sd = train_model(model, X, y, G, device)
-        torch.save(sd, f"experiments/models/graph_class_{groups}groups.pt")
+    #if exists(f"experiments/models/graph_class_{groups}groups.pt"):
+    #    print('=' * 20 + " Loading Previous Model " + '=' * 20)
+    #    model.load_state_dict(torch.load(f"experiments/models/graph_class_{groups}groups.pt", map_location=torch.device('cpu')))
+    #    model.to(device)
+    #else:
+    print('=' * 20 + " Training Model " + '=' * 20)
+    sd = train_model(model, X, y, G, device)
+    torch.save(sd, f"experiments/models/graph_class_{groups}groups.pt")
 
     m_names = ["accuracy", "recall", "precision", "f1_score", "auroc"]
 
