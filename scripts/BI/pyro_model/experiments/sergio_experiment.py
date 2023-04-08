@@ -64,8 +64,7 @@ def train_model(model, X, y, edge_index, device):
             model.to(torch.device('cpu'))
             best_weights = model.state_dict()
             model.to(device)
-        if (epoch + 1 % 100) == 0:
-            print(f"Epoch {epoch} | Best Acc = {best_acc} | Loss = {loss_ep}")
+        print(f"Epoch {epoch} | Best Acc = {best_acc} | Loss = {loss_ep}")
     print('=' * 20 + ' Ended Training ' + '=' * 20)
     return best_weights
 
@@ -119,14 +118,14 @@ if __name__ == '__main__':
 
 
     # Model Training
-    #if exists(f"experiments/models/graph_class_{groups}groups.pt"):
-    #    print('=' * 20 + " Loading Previous Model " + '=' * 20)
-    #    model.load_state_dict(torch.load(f"experiments/models/graph_class_{groups}groups.pt", map_location=torch.device('cpu')))
-    #    model.to(device)
-    #else:
-    print('=' * 20 + " Training Model " + '=' * 20)
-    sd = train_model(model, X, y, G, device)
-    torch.save(sd, f"experiments/models/graph_class_{groups}groups.pt")
+    if exists(f"experiments/models/graph_class_{groups}groups.pt"):
+        print('=' * 20 + " Loading Previous Model " + '=' * 20)
+        model.load_state_dict(torch.load(f"experiments/models/graph_class_{groups}groups.pt", map_location=torch.device('cpu')))
+        model.to(device)
+    else:
+        print('=' * 20 + " Training Model " + '=' * 20)
+        sd = train_model(model, X, y, G, device)
+        torch.save(sd, f"experiments/models/graph_class_{groups}groups.pt")
 
     m_names = ["accuracy", "recall", "precision", "f1_score", "auroc"]
 
