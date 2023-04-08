@@ -19,12 +19,10 @@ class Model(torch.nn.Module):
         self.conv3 = GCNConv(x, x)
         self.fc = torch.nn.Linear(x * N, max(y).tolist() + 1)
 
-    def forward(self, x, edge_index, edge_weight=None):
-        if edge_weight is None:
-            edge_weight = torch.ones_like(edge_index[0, :]).float()
-        x = F.leaky_relu(self.conv1(x, edge_index, edge_weight))
-        x = F.leaky_relu(self.conv2(x, edge_index, edge_weight))
-        x = F.leaky_relu(self.conv3(x, edge_index, edge_weight))
+    def forward(self, x, edge_index):
+        x = F.leaky_relu(self.conv1(x, edge_index))
+        x = F.leaky_relu(self.conv2(x, edge_index))
+        x = F.leaky_relu(self.conv3(x, edge_index))
         return self.fc(x.flatten()).log_softmax(dim=0)
 
 
@@ -108,7 +106,7 @@ avg_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
 for x in samples[:int(0.75 * len(samples))]:
     graph += 1
     start = time.time()
-    explainer = DNFGExplainer(model, 32, X[:,x:x+1], G, device)
+    explainer = DNFGExplainer(model, 64, X[:,x:x+1], G, device)
     explainer.train(750, 1e-3)
     print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
