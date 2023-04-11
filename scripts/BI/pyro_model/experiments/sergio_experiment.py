@@ -9,7 +9,8 @@ from random import shuffle
 import sys
 import time
 
-from torch_geometric.nn import GCNConv
+from torch_geometric.nn import GraphConv
+from torch_geometric.nn import global_mean_pool
 from torch_geometric.explain import Explainer, GNNExplainer, PGExplainer
 from torch_geometric.explain.metric.basic import groundtruth_metrics
 from torch_geometric.utils import k_hop_subgraph
@@ -19,29 +20,37 @@ from os.path import exists
 from typing import Union, Tuple
 from copy import deepcopy
 
+from random import random
+
 procs = 8
 
 # Definitions
 class Model(torch.nn.Module):
-    def __init__(self, y, N, x=64):
+    def __init__(self, y, N, x):
         super(Model, self).__init__()
-        self.conv1 = GCNConv(1, 10)
-        self.conv2 = GCNConv(10, x)
-        self.conv3 = GCNConv(x, x)
-        self.fc = torch.nn.Linear(x * N, max(y).tolist() + 1)
+        self.conv1 = GraphConv(1, 16)
+        self.conv2 = GraphConv(16, x)
+        self.conv3 = GraphConv(x, x)
+        self.conv4 = GraphConv(x, x)
+        self.fc1 = torch.nn.Linear(x * N, x)
+        self.fc2 = torch.nn.Linear(x, 32)
+        self.fc3 = torch.nn.Linear(32, y.max() + 1)
 
     def forward(self, x, edge_index):
         x = F.leaky_relu(self.conv1(x, edge_index))
         x = F.leaky_relu(self.conv2(x, edge_index))
         x = F.leaky_relu(self.conv3(x, edge_index))
-        return self.fc(x.flatten()).log_softmax(dim=0)
+        x = F.leaky_relu(self.conv4(x, edge_index))
+        x = F.leaky_relu(self.fc1(x.flatten()))
+        x = F.leaky_relu(self.fc2(x))
+        return self.fc3(x).log_softmax(dim=0)
 
 
 def train_model(model, X, y, edge_index, device):
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.00001, weight_decay=5e-6)
     best_acc = 0
     print('=' * 20 + ' Started Training ' + '=' * 20)
-    pbar = range(100)
+    pbar = range(3000)
     best_weights = None
     for epoch in pbar:
         # Training step
@@ -49,28 +58,34 @@ def train_model(model, X, y, edge_index, device):
         loss_ep = 0
         correct = 0
         avg_max = 0
-        for n in range(y.shape[0]):
+        rand_check = round(random() * y.shape[0])
+        idxs = list(range(y.shape[0]))
+        shuffle(idxs)
+        for n in idxs:
             optimizer.zero_grad()
             log_logits = model(X[:, n:n + 1], edge_index)
-            loss = F.cross_entropy(log_logits, y[n])
-            loss += log_logits.exp().pow(2).sum()
-            avg_max += log_logits.exp().max().item()
-            loss_ep += loss
+            loss = F.nll_loss(log_logits, y[n])
+            avg_max += log_logits.detach().exp().max().item()
+            loss_ep += loss.detach().item()
             loss.backward()
             optimizer.step()
             correct += (torch.argmax(log_logits) == y[n].item()).float().item()
         avg_max /= y.shape[0]
 
         # Testing step
-        model.eval()
         best_acc = correct / y.shape[0] if (correct / y.shape[0]) > best_acc else best_acc
         if best_acc == correct / y.shape[0]:
             model.to(torch.device('cpu'))
             best_weights = deepcopy(model.state_dict())
             model.to(device)
-            print("Saved Weights!")
-        print(f"Epoch {epoch} | Best Acc = {best_acc} | Loss = {loss_ep} | Avg Max = {avg_max}")
-    print('=' * 20 + ' Ended Training ' + '=' * 20)
+        print(f"Epoch {epoch} | Best Acc = {best_acc} | Loss = {loss_ep / len(idxs)} | Avg Max = {avg_max}")
+    print('=' * 20 + ' Ended Training ' + '=' * 20)  
+    correct = 0
+    for n in range(y.shape[0]):
+        log_logits = model(X[:, n:n + 1], edge_index)
+        correct += (torch.argmax(log_logits) == y[n].item()).float().item()
+    acc = correct / y.shape[0]
+    print(acc)
     return best_weights
 
 
@@ -118,7 +133,7 @@ if __name__ == '__main__':
     gt_grn = torch.tensor([1 if (s.cpu().item(), d.cpu().item()) in grn_s else 0 for s, d in zip(G[0, :], G[1, :])]).to(
         device)
 
-    model = Model(y, 100)
+    model = Model(y, 100, 196)
     model.to(device)
 
 
@@ -131,6 +146,7 @@ if __name__ == '__main__':
         print('=' * 20 + " Training Model " + '=' * 20)
         sd = train_model(model, X, y, G, device)
         torch.save(sd, f"experiments/models/graph_class_{groups}groups.pt")
+    exit()
 
     m_names = ["accuracy", "recall", "precision", "f1_score", "auroc"]
 
