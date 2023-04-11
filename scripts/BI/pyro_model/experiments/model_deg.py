@@ -48,18 +48,19 @@ gt_grn = torch.tensor([1 if (s.cpu().item(), d.cpu().item()) in grn_s else 0 for
 model = Model(y, 100)
 print('=' * 20 + " Loading Previous Model " + '=' * 20)
 model.load_state_dict(torch.load(f"experiments/models/graph_class_{groups}groups.pt", map_location=torch.device('cpu')))
+model.eval()
 model = model.to(device)
+
 
 # Load Testing
 df = pd.DataFrame(columns=["sparsity", "acc"])
 for i in range(11):
-    sparsity = torch.ones(G.shape[1])
+    sparsity = (i / 10) * torch.ones(G.shape[1]).float()
     set_masks(model, sparsity, G, False)
 
     correct = 0
     for n in range(y.shape[0]):
         log_logits = model(X[:, n:n + 1], G)
-        print(log_logits)
         correct += (torch.argmax(log_logits) == y[n].item()).float().item()
     acc = correct / y.shape[0]
     df.loc[len(df.index)] = (i / 10, acc)
