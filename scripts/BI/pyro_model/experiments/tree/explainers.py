@@ -1,8 +1,9 @@
 import torch
 from tree_model import get_or_train_model
+from tqdm import tqdm
 
 from torch_geometric.explain import Explainer, GNNExplainer
-from torch_geometric.explainer.metric.basic import groundtruth_metrics
+from torch_geometric.explain.metric.basic import groundtruth_metrics
 
 
 # Definitions
@@ -34,7 +35,7 @@ gnn_explainer = Explainer(
 )
 final_gnnexp_explanation = torch.zeros_like(gt_grn).float()
 avg_gnnexp_explanation = torch.zeros_like(gt_grn).float()
-for x in range(y.shape[0]):
+for x in tqdm(range(y.shape[0])):
     gnn_exp_explanation = gnn_explainer(X[:, x:x + 1], G)
     final_gnnexp_explanation = torch.max(final_gnnexp_explanation, gnn_exp_explanation.edge_mask)
     avg_gnnexp_explanation += gnn_exp_explanation.edge_mask
