@@ -93,7 +93,7 @@ def get_or_train_model(device=torch.device('cpu')):
     model = GCN(y, 7, 32, device).to(device)
     if exists("experiments/tree/model.pt"):
         print('=' * 20 + " LOADING MODEL " + '=' * 20)
-        model.load_state_dict(torch.load("experiments/tree/model.pt"), map_location=torch.device('cpu'))
+        model.load_state_dict(torch.load("experiments/tree/model.pt", map_location=torch.device('cpu')))
         model.to(device)
     else:
         print('=' * 20 + " TRAINING MODEL " + '=' * 20)
