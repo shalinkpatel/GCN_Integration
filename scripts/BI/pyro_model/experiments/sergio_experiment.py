@@ -9,12 +9,14 @@ from random import shuffle
 import sys
 import time
 
-from torch_geometric.nn import GraphConv
-from torch_geometric.nn import global_mean_pool
+from torch_geometric.nn import SAGEConv, GraphConv
+from torch_geometric.nn import global_add_pool
 from torch_geometric.explain import Explainer, GNNExplainer, PGExplainer
 from torch_geometric.explain.metric.basic import groundtruth_metrics
 from torch_geometric.utils import k_hop_subgraph
 from torch.multiprocessing import Pool
+from torch_geometric.data import Data
+from torch_geometric.loader import DataLoader
 
 from os.path import exists
 from typing import Union, Tuple
@@ -28,26 +30,26 @@ procs = 8
 class Model(torch.nn.Module):
     def __init__(self, y, N, x):
         super(Model, self).__init__()
-        self.conv1 = GraphConv(1, 16)
-        self.conv2 = GraphConv(16, x)
-        self.conv3 = GraphConv(x, x)
-        self.conv4 = GraphConv(x, x)
-        self.fc1 = torch.nn.Linear(x * N, x)
-        self.fc2 = torch.nn.Linear(x, 32)
-        self.fc3 = torch.nn.Linear(32, y.max() + 1)
+        self.conv1 = SAGEConv(1, x)
+        self.conv2 = SAGEConv(x, 2*x)
+        self.conv3 = SAGEConv(2*x, x)
+        self.fc1 = torch.nn.Linear(x, y.max() + 1)
+        self.N = N
 
-    def forward(self, x, edge_index):
-        x = F.leaky_relu(self.conv1(x, edge_index))
-        x = F.leaky_relu(self.conv2(x, edge_index))
-        x = F.leaky_relu(self.conv3(x, edge_index))
-        x = F.leaky_relu(self.conv4(x, edge_index))
-        x = F.leaky_relu(self.fc1(x.flatten()))
-        x = F.leaky_relu(self.fc2(x))
-        return self.fc3(x).log_softmax(dim=0)
+    def forward(self, x, edge_index, batch = None):
+        if batch is None:
+            batch = torch.ones(self.N).to(device)
+        x = F.relu(self.conv1(x, edge_index))
+        x = F.relu(self.conv2(x, edge_index))
+        x = F.relu(self.conv3(x, edge_index))
+
+        x = global_mean_pool(x, batch)
+
+        return self.fc1(x)
 
 
 def train_model(model, X, y, edge_index, device):
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.00001, weight_decay=5e-6)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.00001)
     best_acc = 0
     print('=' * 20 + ' Started Training ' + '=' * 20)
     pbar = range(3000)
@@ -61,15 +63,18 @@ def train_model(model, X, y, edge_index, device):
         rand_check = round(random() * y.shape[0])
         idxs = list(range(y.shape[0]))
         shuffle(idxs)
-        for n in idxs:
+        data_list = [Data(x = X[:, n:n+1], y=y[n], edge_index=edge_index) for n in idxs]
+        loader = DataLoader(data_list, batch_size=16)
+        for grp in loader:
             optimizer.zero_grad()
-            log_logits = model(X[:, n:n + 1], edge_index)
-            loss = F.nll_loss(log_logits, y[n])
-            avg_max += log_logits.detach().exp().max().item()
+            logits = model(grp.x, grp.edge_index, grp.batch)
+            loss = F.cross_entropy(logits, grp.y)
+            probs = logits.softmax(dim=1)
+            avg_max += probs.detach().amax(dim=1).sum().item()
             loss_ep += loss.detach().item()
             loss.backward()
             optimizer.step()
-            correct += (torch.argmax(log_logits) == y[n].item()).float().item()
+            correct += (torch.argmax(probs, dim=1) == grp.y).sum().float().item()
         avg_max /= y.shape[0]
 
         # Testing step
@@ -82,8 +87,8 @@ def train_model(model, X, y, edge_index, device):
     print('=' * 20 + ' Ended Training ' + '=' * 20)  
     correct = 0
     for n in range(y.shape[0]):
-        log_logits = model(X[:, n:n + 1], edge_index)
-        correct += (torch.argmax(log_logits) == y[n].item()).float().item()
+        probs = model(X[:, n:n + 1], edge_index)
+        correct += (torch.argmax(probs) == y[n].item()).float().item()
     acc = correct / y.shape[0]
     print(acc)
     return best_weights
@@ -133,7 +138,7 @@ if __name__ == '__main__':
     gt_grn = torch.tensor([1 if (s.cpu().item(), d.cpu().item()) in grn_s else 0 for s, d in zip(G[0, :], G[1, :])]).to(
         device)
 
-    model = Model(y, 100, 196)
+    model = Model(y, 100, 128)
     model.to(device)
 
 
