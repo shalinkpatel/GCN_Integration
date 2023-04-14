@@ -22,7 +22,9 @@ def save_masks(name: str, grn: torch.Tensor, exp: torch.Tensor, ei: torch.Tensor
 
 
 # Model Loading
-model, X, y, G, gt_grn = get_or_train_model()
+device = torch.device('cuda')
+model, X, y, G, gt_grn = get_or_train_model(device)
+
 print('=' * 20 + " DNFG Explainer " + '=' * 20)
 metrics_dnf_grad = [0, 0, 0, 0, 0]
 samples = list(range(y.shape[0]))
@@ -31,11 +33,11 @@ n_samples = 0
 graph = 0
 final_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
 avg_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
-for x in samples[:int(0.75 * len(samples))]:
+for x in tqdm(samples[:int(1 * len(samples))]):
     graph += 1
     start = time.time()
-    explainer = DNFGExplainer(model, 64, X[:, x:x + 1], G, device)
-    explainer.train(750, 1e-3)
+    explainer = DNFGExplainer(model, 8, X[:, x:x + 1], G, device)
+    explainer.train(500, 1e-3)
     explainer_mask = explainer.edge_mask().detach()
     explainer.clean()
     del explainer
@@ -45,6 +47,7 @@ for x in samples[:int(0.75 * len(samples))]:
     final_dnfgexp_explanation = torch.max(final_dnfgexp_explanation, explainer_mask)
     avg_dnfgexp_explanation += explainer_mask
     res = groundtruth_metrics(explainer_mask, gt_grn)
+    print(res)
     del explainer_mask
     metrics_dnf_grad = [m + r for m, r in zip(metrics_dnf_grad, res)]
     n_samples += 1
