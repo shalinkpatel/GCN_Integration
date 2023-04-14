@@ -69,7 +69,7 @@ for x in tqdm(samples[:int(1 * len(samples))]):
     graph += 1
     start = time.time()
     explainer = DNFGExplainer(model, 16, X[:, x:x + 1], G, device)
-    explainer.train(750, 1e-4)
+    explainer.train(500, 1e-5)
     explainer_mask = explainer.edge_mask().detach()
     explainer.clean()
     del explainer
@@ -103,7 +103,7 @@ for x in tqdm(samples[:int(1 * len(samples))]):
     graph += 1
     start = time.time()
     explainer = BetaExplainer(model, X[:, x:x + 1], G, device)
-    explainer.train(750, 1e-4)
+    explainer.train(750, 1e-5)
     explainer_mask = explainer.edge_mask().detach()
     del explainer
     if torch.isnan(explainer_mask).sum() == explainer_mask.shape[0]:
