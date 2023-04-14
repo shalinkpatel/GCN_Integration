@@ -13,7 +13,7 @@ class BetaExplainer:
         self.X = X
         self.G = G
         with torch.no_grad():
-            self.target = self.model(self.X, self.G)
+            self.target = self.model(self.X, self.G).flatten()
 
         self.ne = G.shape[1]
         self.N = X.shape[0]
@@ -27,7 +27,9 @@ class BetaExplainer:
         beta_edges = beta[self.G[1, :]]
         m = pyro.sample("mask", dist.Beta(alpha_edges, beta_edges).to_event(1))
         set_masks(self.model, m, self.G, False)
-        preds = self.model(self.X, self.G).exp()
+        preds = self.model(self.X, self.G).exp().flatten()
+        print(preds)
+        input()
         with pyro.plate("data_loop"):
             pyro.sample("obs", dist.Categorical(preds), obs=ys)
 
