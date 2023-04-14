@@ -8,6 +8,7 @@ from torch_geometric.explain import Explainer, GNNExplainer
 from torch_geometric.explain.metric.basic import groundtruth_metrics
 
 from model.DNFGExplainer import DNFGExplainer
+from model.BetaExplainer import BetaExplainer
 
 
 # Definitions
@@ -25,6 +26,41 @@ def save_masks(name: str, grn: torch.Tensor, exp: torch.Tensor, ei: torch.Tensor
 device = torch.device('cuda')
 model, X, y, G, gt_grn = get_or_train_model(device)
 
+print('=' * 20 + " Beta Explainer " + '=' * 20)
+metrics_beta = [0, 0, 0, 0, 0]
+samples = list(range(y.shape[0]))
+shuffle(samples)
+n_samples = 0
+graph = 0
+final_betaexp_explanation = torch.zeros_like(gt_grn).float()
+avg_betaexp_explanation = torch.zeros_like(gt_grn).float()
+for x in tqdm(samples[:int(1 * len(samples))]):
+    graph += 1
+    start = time.time()
+    explainer = BetaExplainer(model, X[:, x:x + 1], G, device)
+    explainer.train(750, 1e-3)
+    explainer_mask = explainer.edge_mask().detach()
+    explainer.clean()
+    del explainer
+    if torch.isnan(explainer_mask).sum() == explainer_mask.shape[0]:
+        del explainer_mask
+        continue
+    final_betaexp_explanation = torch.max(final_betaexp_explanation, explainer_mask)
+    avg_betaexp_explanation += explainer_mask
+    res = groundtruth_metrics(explainer_mask, gt_grn)
+    print(res)
+    del explainer_mask
+    metrics_dnf_grad = [m + r for m, r in zip(metrics_beta, res)]
+    n_samples += 1
+metrics_beta = [m / n_samples for m in metrics_beta]
+avg_betaexp_explanation /= n_samples
+print('=' * 20 + " DNFG Results " + '=' * 20)
+print({n: v for n, v in zip(m_names, metrics_beta)})
+print({n: v for n, v in zip(m_names, groundtruth_metrics(final_betaexp_explanation, gt_grn))})
+print({n: v for n, v in zip(m_names, groundtruth_metrics(avg_betaexp_explanation, gt_grn))})
+save_masks("betaexp_max_mask", gt_grn, final_betaexp_explanation, G)
+save_masks("betaexp_avg_mask", gt_grn, avg_betaexp_explanation, G)
+
 print('=' * 20 + " DNFG Explainer " + '=' * 20)
 metrics_dnf_grad = [0, 0, 0, 0, 0]
 samples = list(range(y.shape[0]))
@@ -36,8 +72,8 @@ avg_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
 for x in tqdm(samples[:int(1 * len(samples))]):
     graph += 1
     start = time.time()
-    explainer = DNFGExplainer(model, 8, X[:, x:x + 1], G, device)
-    explainer.train(500, 1e-3)
+    explainer = DNFGExplainer(model, 32, X[:, x:x + 1], G, device)
+    explainer.train(750, 1e-3)
     explainer_mask = explainer.edge_mask().detach()
     explainer.clean()
     del explainer
