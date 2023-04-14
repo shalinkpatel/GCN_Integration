@@ -16,22 +16,27 @@ class BetaExplainer:
             self.target = self.model(self.X, self.G)
 
         self.ne = G.shape[1]
+        self.N = X.shape[0]
         self.obs = 100
         self.device = device
 
     def model_p(self, ys):
-        alpha = 2.0 * torch.ones(self.ne).to(self.device)
-        beta = 6.0 * torch.ones(self.ne).to(self.device)
-        m = pyro.sample("mask", dist.Beta(alpha, beta).to_event(1))
+        alpha = 2.0 * torch.ones(self.N).to(self.device)
+        beta = 6.0 * torch.ones(self.N).to(self.device)
+        alpha_edges = alpha[self.G[0, :]]
+        beta_edges = beta[self.G[1, :]]
+        m = pyro.sample("mask", dist.Beta(alpha_edges, beta_edges).to_event(1))
         set_masks(self.model, m, self.G, False)
         preds = self.model(self.X, self.G).exp()
         with pyro.plate("data_loop"):
             pyro.sample("obs", dist.Categorical(preds), obs=ys)
 
     def guide(self, ys):
-        alpha = pyro.param("alpha_q", 2.0 * torch.ones(self.ne).to(self.device), constraint=constraints.positive)
-        beta = pyro.param("beta_q", 6.0 * torch.ones(self.ne).to(self.device), constraint=constraints.positive)
-        pyro.sample("mask", dist.Beta(alpha, beta).to_event(1))
+        alpha = pyro.param("alpha_q", 2.0 * torch.ones(self.N).to(self.device), constraint=constraints.positive)
+        beta = pyro.param("beta_q", 6.0 * torch.ones(self.N).to(self.device), constraint=constraints.positive)
+        alpha_edges = alpha[self.G[0, :]]
+        beta_edges = beta[self.G[1, :]]
+        pyro.sample("mask", dist.Beta(alpha_edges, beta_edges).to_event(1))
 
     def train(self, epochs: int, lr: float = 0.0005):
         adam_params = {"lr": lr, "betas": (0.90, 0.999)}
