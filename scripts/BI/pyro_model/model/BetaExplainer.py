@@ -28,8 +28,6 @@ class BetaExplainer:
         m = pyro.sample("mask", dist.Beta(alpha_edges, beta_edges).to_event(1))
         set_masks(self.model, m, self.G, False)
         preds = self.model(self.X, self.G).exp().flatten()
-        print(preds)
-        input()
         with pyro.plate("data_loop"):
             pyro.sample("obs", dist.Categorical(preds), obs=ys)
 

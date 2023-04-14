@@ -12,7 +12,7 @@ class DNFGExplainer:
         self.X = X
         self.G = G
         with torch.no_grad():
-            self.target = self.model(self.X, self.G)
+            self.target = self.model(self.X, self.G).flatten()
 
         self.ne = G.shape[1]
 
@@ -28,7 +28,7 @@ class DNFGExplainer:
     def forward(self):
         m = self.flow_dist.rsample().sigmoid()
         set_masks(self.model, m, self.G, False)
-        preds = self.model(self.X, self.G)
+        preds = self.model(self.X, self.G).flatten()
         return preds, m
 
     def edge_mask(self):
