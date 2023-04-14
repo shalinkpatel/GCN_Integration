@@ -42,8 +42,10 @@ gnn_explainer = Explainer(
 )
 final_gnnexp_explanation = torch.zeros_like(gt_grn).float()
 avg_gnnexp_explanation = torch.zeros_like(gt_grn).float()
-for x in tqdm(range(y.shape[0])):
+for x in range(y.shape[0]):
+    start = time.time()
     gnn_exp_explanation = gnn_explainer(X[:, x:x + 1], G)
+    print(f"Time for graph {x}: {time.time() - start}")
     final_gnnexp_explanation = torch.max(final_gnnexp_explanation, gnn_exp_explanation.edge_mask)
     avg_gnnexp_explanation += gnn_exp_explanation.edge_mask
     res = groundtruth_metrics(gnn_exp_explanation.edge_mask, gt_grn)
@@ -65,11 +67,12 @@ n_samples = 0
 graph = 0
 final_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
 avg_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
-for x in tqdm(samples[:int(1 * len(samples))]):
+for x in samples[:int(0.25 * len(samples))]:
     graph += 1
     start = time.time()
     explainer = DNFGExplainer(model, 16, X[:, x:x + 1], G, device)
     explainer.train(500, 1e-4)
+    print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
     explainer.clean()
     del explainer
@@ -99,11 +102,12 @@ n_samples = 0
 graph = 0
 final_betaexp_explanation = torch.zeros_like(gt_grn).float()
 avg_betaexp_explanation = torch.zeros_like(gt_grn).float()
-for x in tqdm(samples[:int(1 * len(samples))]):
+for x in samples[:int(0.5 * len(samples))]:
     graph += 1
     start = time.time()
     explainer = BetaExplainer(model, X[:, x:x + 1], G, device)
     explainer.train(750, 1e-4)
+    print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
     del explainer
     if torch.isnan(explainer_mask).sum() == explainer_mask.shape[0]:
