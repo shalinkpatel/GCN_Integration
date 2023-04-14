@@ -30,7 +30,7 @@ class GCN(torch.nn.Module):
 
         x = global_mean_pool(x, batch)
 
-        return self.fc1(x).log_softmax(dim=1)
+        return self.fc1(x)#.log_softmax(dim=1)
 
 
 def train_model(model, X, y, edge_index, device):
@@ -97,7 +97,7 @@ def get_or_train_model(device=torch.device('cpu')):
         model.to(device)
     else:
         print('=' * 20 + " TRAINING MODEL " + '=' * 20)
-        sd = train_model(model, x, y, G, device)
+        sd = train_model(model, x, y, grn, device)
         torch.save(sd, 'experiments/tree/model.pt')
 
     return model, x, y, G, gt_grn
