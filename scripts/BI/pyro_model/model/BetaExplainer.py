@@ -36,7 +36,9 @@ class BetaExplainer:
         beta = pyro.param("beta_q", 0.95 * torch.ones(self.N).to(self.device), constraint=constraints.positive)
         alpha_edges = alpha[self.G[0, :]]
         beta_edges = beta[self.G[1, :]]
-        pyro.sample("mask", dist.Beta(alpha_edges, beta_edges).to_event(1))
+        m = pyro.sample("mask", dist.Beta(alpha_edges, beta_edges).to_event(1))
+        set_masks(self.model, m, self.G, False)
+        self.model(self.X, self.G).exp().flatten()
 
     def train(self, epochs: int, lr: float = 0.0005):
         adam_params = {"lr": lr, "betas": (0.90, 0.999)}
