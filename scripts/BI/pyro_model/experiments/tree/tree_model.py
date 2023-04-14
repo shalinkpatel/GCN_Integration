@@ -30,7 +30,7 @@ class GCN(torch.nn.Module):
 
         x = global_mean_pool(x, batch)
 
-        return self.fc1(x)#.log_softmax(dim=1)
+        return self.fc1(x).log_softmax(dim=1)
 
 
 def train_model(model, X, y, edge_index, G, device):

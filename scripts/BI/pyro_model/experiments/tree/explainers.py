@@ -25,12 +25,14 @@ def save_masks(name: str, grn: torch.Tensor, exp: torch.Tensor, ei: torch.Tensor
 # Model Loading
 device = torch.device('cuda')
 model, X, y, G, gt_grn = get_or_train_model(device)
+X = X[:, y == 1]
+y = y[y == 1]
 
 print('=' * 20 + " GNN Explainer " + '=' * 20)
 metrics_gnn_exp = [0, 0, 0, 0, 0]
 gnn_explainer = Explainer(
     model=model,
-    algorithm=GNNExplainer(epochs=1000),
+    algorithm=GNNExplainer(epochs=500),
     explanation_type='model',
     node_mask_type='attributes',
     edge_mask_type='object',
@@ -70,8 +72,8 @@ avg_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
 for x in samples[:int(0.25 * len(samples))]:
     graph += 1
     start = time.time()
-    explainer = DNFGExplainer(model, 16, X[:, x:x + 1], G, device)
-    explainer.train(500, 1e-4)
+    explainer = DNFGExplainer(model, 32, X[:, x:x + 1], G, device)
+    explainer.train(1000, 1e-3)
     print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
     explainer.clean()
@@ -102,11 +104,11 @@ n_samples = 0
 graph = 0
 final_betaexp_explanation = torch.zeros_like(gt_grn).float()
 avg_betaexp_explanation = torch.zeros_like(gt_grn).float()
-for x in samples[:int(0.5 * len(samples))]:
+for x in samples[:int(1 * len(samples))]:
     graph += 1
     start = time.time()
     explainer = BetaExplainer(model, X[:, x:x + 1], G, device)
-    explainer.train(750, 1e-4)
+    explainer.train(1500, 1e-3)
     print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
     del explainer
@@ -116,9 +118,8 @@ for x in samples[:int(0.5 * len(samples))]:
     final_betaexp_explanation = torch.max(final_betaexp_explanation, explainer_mask)
     avg_betaexp_explanation += explainer_mask
     res = groundtruth_metrics(explainer_mask, gt_grn)
-    print(res)
     del explainer_mask
-    metrics_dnf_grad = [m + r for m, r in zip(metrics_beta, res)]
+    metrics_beta = [m + r for m, r in zip(metrics_beta, res)]
     n_samples += 1
 metrics_beta = [m / n_samples for m in metrics_beta]
 avg_betaexp_explanation /= n_samples
