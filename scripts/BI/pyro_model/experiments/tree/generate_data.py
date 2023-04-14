@@ -23,8 +23,10 @@ class TreeWalk:
         counts = [0 for _ in nodes]
         curr = choices(nodes, k=1)[0]
         for _ in range(75):
+            prev = curr
             curr = choices(nodes, self.probs[p][curr], k=1)[0]
-            counts[curr] += 1
+            if self.probs[p][prev][curr] >= 0.2:
+                counts[curr] += 1
         return counts
 
     def generate_dataset(self):

@@ -33,7 +33,7 @@ class GCN(torch.nn.Module):
         return self.fc1(x)#.log_softmax(dim=1)
 
 
-def train_model(model, X, y, edge_index, device):
+def train_model(model, X, y, edge_index, G, device):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     best_acc = 0
     print('=' * 20 + ' Started Training ' + '=' * 20)
@@ -62,7 +62,7 @@ def train_model(model, X, y, edge_index, device):
         # Testing step
         correct = 0
         for n in idxs[int(0.5 * len(idxs)):]:
-            probs = model(X[:, n:n + 1], edge_index).softmax(dim=1)
+            probs = model(X[:, n:n + 1], G).softmax(dim=1)
             correct += (torch.argmax(probs) == y[n].item()).float().item()
         acc = correct / (0.5 * len(idxs))
 
@@ -71,7 +71,7 @@ def train_model(model, X, y, edge_index, device):
             model.to(torch.device('cpu'))
             best_weights = deepcopy(model.state_dict())
             model.to(device)
-        print(f"Epoch {epoch} | Best Acc = {best_acc} | Loss = {loss_ep / len(idxs)} | Avg Max = {avg_max}")
+        print(f"Epoch {epoch} | Best Acc = {best_acc} | Acc = {acc} | Loss = {loss_ep / len(idxs)} | Avg Max = {avg_max}")
     print('=' * 20 + ' Ended Training ' + '=' * 20)
     correct = 0
     for n in range(y.shape[0]):
@@ -97,7 +97,7 @@ def get_or_train_model(device=torch.device('cpu')):
         model.to(device)
     else:
         print('=' * 20 + " TRAINING MODEL " + '=' * 20)
-        sd = train_model(model, x, y, grn, device)
+        sd = train_model(model, x, y, grn, G, device)
         torch.save(sd, 'experiments/tree/model.pt')
 
     return model, x, y, G, gt_grn
