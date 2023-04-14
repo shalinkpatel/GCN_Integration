@@ -24,7 +24,8 @@ def save_masks(name: str, grn: torch.Tensor, exp: torch.Tensor, ei: torch.Tensor
 
 # Model Loading
 device = torch.device('cuda')
-model, X, y, G, gt_grn = get_or_train_model(device)
+model_b, X, y, G, gt_grn = get_or_train_model(device)
+model = lambda X, G: model_b(X, G).log_softmax(dim=1).flatten()
 
 print('=' * 20 + " Beta Explainer " + '=' * 20)
 metrics_beta = [0, 0, 0, 0, 0]
