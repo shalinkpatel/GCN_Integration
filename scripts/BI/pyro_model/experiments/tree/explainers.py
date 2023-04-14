@@ -61,7 +61,6 @@ print({n: v for n, v in zip(m_names, groundtruth_metrics(avg_dnfgexp_explanation
 save_masks("dnfgexp_max_mask", gt_grn, final_dnfgexp_explanation, G)
 save_masks("dnfgexp_avg_mask", gt_grn, avg_dnfgexp_explanation, G)
 
-
 print('=' * 20 + " Beta Explainer " + '=' * 20)
 metrics_beta = [0, 0, 0, 0, 0]
 samples = list(range(y.shape[0]))
@@ -76,7 +75,6 @@ for x in tqdm(samples[:int(1 * len(samples))]):
     explainer = BetaExplainer(model, X[:, x:x + 1], G, device)
     explainer.train(750, 1e-3)
     explainer_mask = explainer.edge_mask().detach()
-    explainer.clean()
     del explainer
     if torch.isnan(explainer_mask).sum() == explainer_mask.shape[0]:
         del explainer_mask
