@@ -1,6 +1,5 @@
 import torch
 from tree_model import get_or_train_model
-from tqdm import tqdm
 import time
 from random import shuffle
 
@@ -72,8 +71,8 @@ avg_dnfgexp_explanation = torch.zeros_like(gt_grn).float()
 for x in samples[:int(0.25 * len(samples))]:
     graph += 1
     start = time.time()
-    explainer = DNFGExplainer(model, 32, X[:, x:x + 1], G, device)
-    explainer.train(1000, 1e-3)
+    explainer = DNFGExplainer(model, 8, X[:, x:x + 1], G, device)
+    explainer.train(3000, 5e-4)
     print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
     explainer.clean()

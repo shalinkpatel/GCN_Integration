@@ -20,19 +20,19 @@ class DNFGExplainer:
         self.splines = []
         self.params_l = []
         for _ in range(self.n_splines):
-            self.splines.append(T.spline_coupling(self.ne).to(device))
+            self.splines.append(T.spline_autoregressive(self.ne).to(device))
             self.params_l += self.splines[-1].parameters()
         self.params = torch.nn.ParameterList(self.params_l)
         self.flow_dist = dist.TransformedDistribution(self.base_dist, self.splines)
 
     def forward(self):
-        m = self.flow_dist.rsample().sigmoid()
+        m = self.flow_dist.rsample(torch.Size([25,])).sigmoid().mean(dim=0)
         set_masks(self.model, m, self.G, False)
         preds = self.model(self.X, self.G).flatten()
         return preds, m
 
     def edge_mask(self):
-        return self.flow_dist.sample(torch.Size([250, ])).sigmoid().mean(dim=0)
+        return self.flow_dist.sample(torch.Size([1000, ])).sigmoid().mean(dim=0)
 
     def train(self, epochs: int, lr: float):
         optimizer = torch.optim.Adam(self.params, lr=lr)
@@ -41,7 +41,9 @@ class DNFGExplainer:
             preds, m = self.forward()
             kl = F.kl_div(preds, self.target, log_target=True)
             reg = m.mean()
-            loss = kl + 0.1 * reg
+            loss = kl + 4.5e-7 * reg
+            if (epoch + 1) % 250 == 0:
+                print(f"epoch = {epoch + 1} | loss = {loss.detach().item()}")
             loss.backward()
             optimizer.step()
             self.flow_dist.clear_cache()
