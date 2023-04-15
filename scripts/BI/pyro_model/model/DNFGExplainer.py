@@ -42,8 +42,6 @@ class DNFGExplainer:
             kl = F.kl_div(preds, self.target, log_target=True)
             reg = m.mean()
             loss = kl + 4.5e-7 * reg
-            if (epoch + 1) % 250 == 0:
-                print(f"epoch = {epoch + 1} | loss = {loss.detach().item()}")
             loss.backward()
             optimizer.step()
             self.flow_dist.clear_cache()
