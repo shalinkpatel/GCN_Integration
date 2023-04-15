@@ -19,6 +19,6 @@ grid = Iterators.product(λs, ρs) |> collect
 results = map(t -> eval_params(base_model, G, t[1], t[2]), grid)
 
 @info results
-jldsave("data/gnn_deg.jld", results)
+jldsave("data/gnn_deg.jld", res=results)
 
 heatmap(results)
