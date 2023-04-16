@@ -50,8 +50,6 @@ class BetaExplainer:
             ys = torch.distributions.categorical.Categorical(self.target.exp()).sample(torch.Size([self.obs]))
             elbo = svi.step(ys)
             elbos.append(elbo)
-            if (epoch + 1) % 250 == 0:
-                print(f"epoch = {epoch} | elbo = {sum(elbos) / 250}")
             if epoch > 249:
                 elbos.pop(0)
 
