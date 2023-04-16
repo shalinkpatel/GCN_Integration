@@ -26,8 +26,6 @@ device = torch.device('cuda')
 model, X, y, G, gt_grn = get_or_train_model(device)
 X = X[:, y == 1]
 y = y[y == 1]
-print(len(y))
-
 
 print('=' * 20 + " DNFG Explainer " + '=' * 20)
 metrics_dnf_grad = [0, 0, 0, 0, 0]
