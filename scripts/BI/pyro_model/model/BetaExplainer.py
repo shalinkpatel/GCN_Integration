@@ -60,4 +60,4 @@ class BetaExplainer:
         return m.mean(dim=0)
 
     def edge_distribution(self):
-        return torch.distribution.beta.Beta(pyro.param("alpha_q").detach()[self.G[0, :]], pyro.param("beta_q").detach()[self.G[1, :]]).sample(torch.Size([1000]))
+        return torch.distributions.beta.Beta(pyro.param("alpha_q").detach()[self.G[0, :]], pyro.param("beta_q").detach()[self.G[1, :]]).sample(torch.Size([1000]))
