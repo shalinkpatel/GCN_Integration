@@ -74,14 +74,9 @@ for x in samples[:int(1 * len(samples))]:
     explainer.train(20000, 1e-4)
     print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
-    del explainer
-    if torch.isnan(explainer_mask).sum() == explainer_mask.shape[0]:
-        del explainer_mask
-        continue
     final_betaexp_explanation = torch.max(final_betaexp_explanation, explainer_mask)
     avg_betaexp_explanation += explainer_mask
     res = groundtruth_metrics(explainer_mask, gt_grn)
-    del explainer_mask
     metrics_beta = [m + r for m, r in zip(metrics_beta, res)]
     n_samples += 1
 metrics_beta = [m / n_samples for m in metrics_beta]
