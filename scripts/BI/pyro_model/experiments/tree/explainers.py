@@ -44,7 +44,7 @@ for x in samples[:int(0.25 * len(samples))]:
     explainer_mask = explainer.edge_mask().detach()
     print(f"Positive Accuracy: {(explainer_mask[gt_grn == 1] > 0.5).float().mean()}")
     print(f"Negative Accuracy: {(explainer_mask[gt_grn == 0] < 0.5).float().mean()}")
-    print(f"Edge Mask: {explainer_mask()}")
+    print(f"Edge Mask: {explainer_mask}")
     final_dnfgexp_explanation = torch.max(final_dnfgexp_explanation, explainer_mask)
     avg_dnfgexp_explanation += explainer_mask
     res = groundtruth_metrics(explainer_mask, gt_grn)
@@ -74,6 +74,9 @@ for x in samples[:int(1 * len(samples))]:
     explainer.train(20000, 1e-4)
     print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
+    print(f"Positive Accuracy: {(explainer_mask[gt_grn == 1] > 0.5).float().mean()}")
+    print(f"Negative Accuracy: {(explainer_mask[gt_grn == 0] < 0.5).float().mean()}")
+    print(f"Edge Mask: {explainer_mask}")
     final_betaexp_explanation = torch.max(final_betaexp_explanation, explainer_mask)
     avg_betaexp_explanation += explainer_mask
     res = groundtruth_metrics(explainer_mask, gt_grn)
