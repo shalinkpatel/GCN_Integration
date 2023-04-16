@@ -51,10 +51,10 @@ for x in samples[:int(0.25 * len(samples))]:
     print(f"Graph Result: {res}")
     metrics_dnf_grad = [m + r for m, r in zip(metrics_dnf_grad, res)]
     n_samples += 1
-metrics_nf_grad = [m / n_samples for m in metrics_dnf_grad]
+metrics_dnf_grad = [m / n_samples for m in metrics_dnf_grad]
 avg_dnfgexp_explanation /= n_samples
 print('=' * 20 + " DNFG Results " + '=' * 20)
-print({n: v for n, v in zip(m_names, metrics_nf_grad)})
+print({n: v for n, v in zip(m_names, metrics_dnf_grad)})
 print({n: v for n, v in zip(m_names, groundtruth_metrics(final_dnfgexp_explanation, gt_grn))})
 print({n: v for n, v in zip(m_names, groundtruth_metrics(avg_dnfgexp_explanation, gt_grn))})
 save_masks("dnfgexp_max_mask", gt_grn, final_dnfgexp_explanation, G)
