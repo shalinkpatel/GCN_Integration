@@ -34,6 +34,9 @@ class DNFGExplainer:
     def edge_mask(self):
         return self.flow_dist.sample(torch.Size([1000, ])).sigmoid().mean(dim=0)
 
+    def edge_distribution(self):
+        return self.flow_dist.sample(torch.Size([1000, ])).sigmoid()
+
     def train(self, epochs: int, lr: float):
         optimizer = torch.optim.Adam(self.params, lr=lr)
         for epoch in range(epochs):
