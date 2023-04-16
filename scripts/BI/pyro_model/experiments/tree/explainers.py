@@ -27,7 +27,6 @@ model, X, y, G, gt_grn = get_or_train_model(device)
 X = X[:, y == 1]
 y = y[y == 1]
 
-
 print('=' * 20 + " DNFG Explainer " + '=' * 20)
 metrics_dnf_grad = [0, 0, 0, 0, 0]
 samples = list(range(y.shape[0]))
@@ -49,6 +48,7 @@ for x in samples[:int(0.25 * len(samples))]:
     final_dnfgexp_explanation = torch.max(final_dnfgexp_explanation, explainer_mask)
     avg_dnfgexp_explanation += explainer_mask
     res = groundtruth_metrics(explainer_mask, gt_grn)
+    print(f"Graph Result: {res}")
     metrics_dnf_grad = [m + r for m, r in zip(metrics_dnf_grad, res)]
     n_samples += 1
 metrics_nf_grad = [m / n_samples for m in metrics_dnf_grad]
@@ -81,7 +81,7 @@ for x in samples[:int(1 * len(samples))]:
     final_betaexp_explanation = torch.max(final_betaexp_explanation, explainer_mask)
     avg_betaexp_explanation += explainer_mask
     res = groundtruth_metrics(explainer_mask, gt_grn)
-    print(f"epoch res = {res}")
+    print(f"Graph Result: {res}")
     metrics_beta = [m + r for m, r in zip(metrics_beta, res)]
     n_samples += 1
 metrics_beta = [m / n_samples for m in metrics_beta]
