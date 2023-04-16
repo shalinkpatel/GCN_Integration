@@ -17,12 +17,12 @@ class BetaExplainer:
 
         self.ne = G.shape[1]
         self.N = X.shape[0]
-        self.obs = 100
+        self.obs = 1000
         self.device = device
 
     def model_p(self, ys):
-        alpha = 0.95 * torch.ones(self.N).to(self.device)
-        beta = 0.95 * torch.ones(self.N).to(self.device)
+        alpha = 0.6 * torch.ones(self.N).to(self.device)
+        beta = 0.9 * torch.ones(self.N).to(self.device)
         alpha_edges = alpha[self.G[0, :]]
         beta_edges = beta[self.G[1, :]]
         m = pyro.sample("mask", dist.Beta(alpha_edges, beta_edges).to_event(1))
@@ -32,8 +32,8 @@ class BetaExplainer:
             pyro.sample("obs", dist.Categorical(preds), obs=ys)
 
     def guide(self, ys):
-        alpha = pyro.param("alpha_q", 0.95 * torch.ones(self.N).to(self.device), constraint=constraints.positive)
-        beta = pyro.param("beta_q", 0.95 * torch.ones(self.N).to(self.device), constraint=constraints.positive)
+        alpha = pyro.param("alpha_q", 0.6 * torch.ones(self.N).to(self.device), constraint=constraints.positive)
+        beta = pyro.param("beta_q", 0.9 * torch.ones(self.N).to(self.device), constraint=constraints.positive)
         alpha_edges = alpha[self.G[0, :]]
         beta_edges = beta[self.G[1, :]]
         m = pyro.sample("mask", dist.Beta(alpha_edges, beta_edges).to_event(1))
@@ -45,12 +45,18 @@ class BetaExplainer:
         optimizer = Adam(adam_params)
         svi = SVI(self.model_p, self.guide, optimizer, loss=Trace_ELBO())
 
-        for _ in range(epochs):
+        elbos = []
+        for epoch in range(epochs):
             ys = torch.distributions.categorical.Categorical(self.target.exp()).sample(torch.Size([self.obs]))
-            svi.step(ys)
+            elbo = svi.step(ys)
+            elbos.append(elbo)
+            if (epoch + 1) % 250 == 0:
+                print(f"epoch = {epoch} | elbo = {sum(elbos) / 250}")
+            if epoch > 249:
+                elbos.pop(0)
 
         clear_masks(self.model)
 
     def edge_mask(self):
-        m = torch.distributions.beta.Beta(pyro.param("alpha_q").detach()[self.G[0, :]], pyro.param("beta_q").detach()[self.G[1, :]]).sample(torch.Size([250]))
+        m = torch.distributions.beta.Beta(pyro.param("alpha_q").detach()[self.G[0, :]], pyro.param("beta_q").detach()[self.G[1, :]]).sample(torch.Size([1000]))
         return m.mean(dim=0)
