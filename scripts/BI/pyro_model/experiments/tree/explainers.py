@@ -80,6 +80,7 @@ for x in samples[:int(1 * len(samples))]:
     final_betaexp_explanation = torch.max(final_betaexp_explanation, explainer_mask)
     avg_betaexp_explanation += explainer_mask
     res = groundtruth_metrics(explainer_mask, gt_grn)
+    print(f"epoch res = {res}")
     metrics_beta = [m + r for m, r in zip(metrics_beta, res)]
     n_samples += 1
 metrics_beta = [m / n_samples for m in metrics_beta]
