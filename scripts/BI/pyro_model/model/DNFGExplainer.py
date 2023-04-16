@@ -16,7 +16,7 @@ class DNFGExplainer:
 
         self.ne = G.shape[1]
 
-        self.base_dist = dist.Beta(0.95 * torch.ones(self.ne).to(device), 0.95 * torch.ones(self.ne).to(device))
+        self.base_dist = dist.MultivariateNormal(torch.zeros(self.ne).to(device), torch.eye(self.ne).to(device))
         self.splines = []
         self.params_l = []
         for _ in range(self.n_splines):
@@ -41,7 +41,9 @@ class DNFGExplainer:
             preds, m = self.forward()
             kl = F.kl_div(preds, self.target, log_target=True)
             reg = m.mean()
-            loss = kl + 4.5e-7 * reg
+            loss = kl + 6e-7 * reg
+            if (epoch + 1) % 250 == 0:
+                print(f"epoch = {epoch + 1} | loss = {loss.detach().item()}")
             loss.backward()
             optimizer.step()
             self.flow_dist.clear_cache()
