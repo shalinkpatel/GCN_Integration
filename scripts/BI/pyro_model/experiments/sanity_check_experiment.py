@@ -142,6 +142,12 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
         try:
             pyro.clear_param_store()
             subset, edge_index_adj, mapping, edge_mask_hard = k_hop_subgraph(n, k, edge_index, relabel_nodes=True)
+
+            labs = labels[edge_mask_hard]
+            logger.info(labs)
+            if labs.unique().shape[0] == 1:
+                raise ValueError
+
             X_adj = X[subset]
             explainer = explainer_generator(experiment.model, X_adj, edge_index_adj)
             start = time.time()
@@ -149,9 +155,6 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
             logger.info(f"Time for graph {n}: {time.time() - start}")
             edge_mask = explainer.edge_mask()
             logger.info(edge_mask)
-
-            labs = labels[edge_mask_hard]
-            logger.info(labs)
 
             for i, v in enumerate(labs.cpu().detach().numpy().tolist()):
                 if v == 1:
