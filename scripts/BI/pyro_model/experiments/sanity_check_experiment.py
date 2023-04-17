@@ -1,6 +1,5 @@
 from model.Experiment import Experiment
 from model.samplers.RandomWalkSampler import RandomWalkSampler
-from model.searchers.GNNExplainerSearcher import GNNExplainerSearcher
 from model.samplers.NFGradSampler import NFGradSampler
 from model.DeterministicExplainer import DeterministicExplainer
 from model.BayesExplainer import BayesExplainer
@@ -215,13 +214,11 @@ test_sampler(experiment, noisy_G, gr_truth, rw_sampler, BayesExplainer, Experime
 logger.info("Finished evaluating RWSampler on Sanity Check Dataset")
 
 # --------------- GNNExplainer -----------------
-ge_hparams = {
-    "name": "gnn_explainer",
-    "epochs": 1000
-}
-ge_searcher = GNNExplainerSearcher(**ge_hparams)
-test_sampler(experiment, noisy_G, gr_truth, ge_searcher, DeterministicExplainer, Experiment.experiment_name(ge_hparams))
+# ge_hparams = {
+#     "name": "gnn_explainer",
+#     "epochs": 1000
+# }
+# ge_searcher = GNNExplainerSearcher(**ge_hparams)
+# test_sampler(experiment, noisy_G, gr_truth, ge_searcher, DeterministicExplainer, Experiment.experiment_name(ge_hparams))
 
-logger.info("Finished evaluating GNNExplainer on Sanity Check Dataset")
-
-
+# logger.info("Finished evaluating GNNExplainer on Sanity Check Dataset")
