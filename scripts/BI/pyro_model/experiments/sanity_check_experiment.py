@@ -133,6 +133,8 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
     X = experiment.x
     k = experiment.k
 
+    logger.info(f"Testing {len(nodes)} Nodes")
+
     for n in nodes:
         try:
             pyro.clear_param_store()
