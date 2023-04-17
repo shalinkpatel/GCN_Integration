@@ -14,11 +14,11 @@ from torch_geometric.nn import GCNConv
 from model.samplers.BaseSampler import BaseSampler
 from model.searchers.BaseSearcher import BaseSearcher
 import traceback
-from datasets.dataset_loaders import load_dataset
-from datasets.ground_truth_loaders import load_dataset_ground_truth
+from model.datasets.dataset_loaders import load_dataset
+from model.datasets.ground_truth_loaders import load_dataset_ground_truth
 from loguru import logger
 
-from utils.serialization import with_serializer
+from model.utils.serialization import with_serializer
 
 from multipledispatch import dispatch
 
