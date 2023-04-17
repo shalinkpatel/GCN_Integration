@@ -11,11 +11,8 @@ from torch.utils.tensorboard import SummaryWriter
 from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv
 
-from BayesExplainer import BayesExplainer
-from DeterministicExplainer import DeterministicExplainer
-from MCMCExplainer import MCMCExplainer
-from samplers.BaseSampler import BaseSampler
-from searchers.BaseSearcher import BaseSearcher
+from model.samplers.BaseSampler import BaseSampler
+from model.searchers.BaseSearcher import BaseSearcher
 import traceback
 from datasets.dataset_loaders import load_dataset
 from datasets.ground_truth_loaders import load_dataset_ground_truth
