@@ -1,7 +1,6 @@
 from model.Experiment import Experiment
 from model.samplers.RandomWalkSampler import RandomWalkSampler
 from model.samplers.NFGradSampler import NFGradSampler
-from model.DeterministicExplainer import DeterministicExplainer
 from model.BayesExplainer import BayesExplainer
 from model.samplers.BaseSampler import BaseSampler
 from model.BetaExplainer import BetaExplainer
@@ -177,7 +176,7 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
 
 
 # --------------- Setting Up Data -----------------
-experiment = Experiment("syn3-full-verifed", "..")
+experiment = Experiment("syn3-full-verifed", ".")
 experiment.train_base_model()
 
 logger.info("Finished training base model")
