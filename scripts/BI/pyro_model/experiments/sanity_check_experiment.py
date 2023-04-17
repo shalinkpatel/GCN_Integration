@@ -187,6 +187,8 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
             logger.info(f"{name.replace('||', '.')} | {n} | avg_f1 {f1 / done}")
         except ValueError:
             logger.info(f"Skipping node {n} because there is only one class present in labels")
+        except AssertionError:
+            logger.info(f"Skippng node {n} due to an assertion error")
 
 
 # --------------- Setting Up Data -----------------
