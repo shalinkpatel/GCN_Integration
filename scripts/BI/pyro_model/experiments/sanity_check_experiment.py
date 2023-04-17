@@ -4,6 +4,7 @@ from model.samplers.NFGradSampler import NFGradSampler
 from model.BayesExplainer import BayesExplainer
 from model.samplers.BaseSampler import BaseSampler
 from model.BetaExplainer import BetaExplainer
+from model.DNFGExplainer import DNFGExplainer
 
 from torch_geometric.utils import k_hop_subgraph
 from loguru import logger
@@ -12,6 +13,7 @@ import pyro
 import torch
 from sklearn.metrics import roc_auc_score, accuracy_score, f1_score, average_precision_score
 import numpy as np
+import time
 
 
 def edge_list_to_edge_index(fl: str) -> torch.Tensor:
@@ -113,7 +115,7 @@ def test_sampler(experiment: Experiment, edge_index: torch.Tensor, labels: torch
     logger.info(f"{name.replace('||', '.')} | FINISHED | avg_f1 {f1 / done}")
 
 
-def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels: torch.Tensor, name: str):
+def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels: torch.Tensor, name: str, explainer_generator, epochs: int, lr: float):
     logger.info(f"Testing sampler {name}")
 
     auc = 0
@@ -136,8 +138,10 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
             pyro.clear_param_store()
             subset, edge_index_adj, mapping, edge_mask_hard = k_hop_subgraph(n, k, edge_index, relabel_nodes=True)
             X_adj = X[subset]
-            explainer = BetaExplainer(experiment.model, X_adj, edge_index_adj, torch.device('cpu'))
-            explainer.train(20000, 1e-4)
+            explainer = explainer_generator(experiment.model, X_adj, edge_index_adj)
+            start = time.time()
+            explainer.train(epochs, lr)
+            logger.info(f"Time for graph {n}: {time.time() - start}")
             edge_mask = explainer.edge_mask()
 
             logger.info(edge_mask)
@@ -187,8 +191,14 @@ noisy_G = edge_list_to_edge_index("/users/spate116/singhlab/GCN_Integration/scri
 gr_truth = is_noise(experiment, noisy_G)
 
 # --------------- BetaExplainer --------------------
-test_new_explainer(experiment, noisy_G, gr_truth, "BetaExplainer")
+beta_model_generator = lambda model, X, ei: BetaExplainer(model, X, ei, torch.device('cpu'))
+test_new_explainer(experiment, noisy_G, gr_truth, "BetaExplainer", beta_model_generator, 25000, 1e-4)
 logger.info("Finished evaluating BetaExplainer on Sanity Check Experiment")
+
+# --------------- DNFGExplainer --------------------
+dnfg_model_generator = lambda model, X, ei: DNFGExplainer(model, 8, X, ei, torch.device('cpu'))
+test_new_explainer(experiment, noisy_G, gr_truth, "DNFGExplainer", dnfg_model_generator, 3000, 1e-4)
+
 exit()
 
 # --------------- NFGradSampler -----------------
