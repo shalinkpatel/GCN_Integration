@@ -68,7 +68,7 @@ n_samples = 0
 graph = 0
 final_betaexp_explanation = torch.zeros_like(gt_grn).float()
 avg_betaexp_explanation = torch.zeros_like(gt_grn).float()
-for x in samples[:int(1 * len(samples))]:
+for x in samples[:int(0.25 * len(samples))]:
     graph += 1
     start = time.time()
     explainer = BetaExplainer(model, X[:, x:x + 1], G, device)
