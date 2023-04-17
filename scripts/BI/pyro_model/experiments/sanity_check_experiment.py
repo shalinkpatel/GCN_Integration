@@ -136,7 +136,7 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
             pyro.clear_param_store()
             subset, edge_index_adj, mapping, edge_mask_hard = k_hop_subgraph(n, k, edge_index, relabel_nodes=True)
             X_adj = X[subset]
-            explainer = BetaExplainer(experiment.model, X_adj, edge_index, torch.device('cpu'))
+            explainer = BetaExplainer(experiment.model, X_adj, edge_index_adj, torch.device('cpu'))
             explainer.train(20000, 1e-4)
             edge_mask = explainer.edge_mask()
 
