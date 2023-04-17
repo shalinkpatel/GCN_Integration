@@ -140,6 +140,8 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
             explainer.train(20000, 1e-4)
             edge_mask = explainer.edge_mask()
 
+            logger.info(edge_mask)
+
             labs = labels[edge_mask_hard]
 
             for i, v in enumerate(labs.cpu().detach().numpy().tolist()):
