@@ -1,7 +1,6 @@
 from model.Experiment import Experiment
 from model.samplers.RandomWalkSampler import RandomWalkSampler
 from model.samplers.NFGradSampler import NFGradSampler
-from model.DeterministicExplainer import DeterministicExplainer
 from model.BayesExplainer import BayesExplainer
 from model.samplers.BaseSampler import BaseSampler
 from model.BetaExplainer import BetaExplainer
