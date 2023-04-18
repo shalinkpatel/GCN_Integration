@@ -3,7 +3,7 @@
 #SBATCH -N 1
 #SBATCH -c 2
 #SBATCH --time 24:00:00
-#SBATCH --mem-per-cpu 16G
+#SBATCH --mem-per-cpu 64G
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=shalin_patel@brown.edu
 
