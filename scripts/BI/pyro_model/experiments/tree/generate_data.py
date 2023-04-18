@@ -30,7 +30,7 @@ class TreeWalk:
         return counts
 
     def generate_dataset(self):
-        gt_grn = torch.tensor([[0, 0, 2, 3, 5, 6], [1, 4, 1, 1, 4, 4]]).long()
+        gt_grn = torch.tensor([[0, 0, 2, 3, 5, 6], [1, 4, 1, 1, 4, 5]]).long()
         comp_graph = [[], []]
         for i in range(7):
             for j in range(7):
