@@ -125,7 +125,7 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
     done = 0
     nodes = list(range(experiment.x.shape[0]))
     shuffle(nodes)
-    nodes = nodes[:int(round(0.1 * len(nodes)))]
+    nodes = nodes[:int(round(0.25 * len(nodes)))]
 
     X = experiment.x
     k = experiment.k
@@ -159,6 +159,9 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
 
             logger.info(f"{name.replace('||', '.')} | {n} | itr_acc {itr_acc}")
             logger.info(f"{name.replace('||', '.')} | {n} | avg_acc {acc / done}")
+
+            if done >= 22:
+                break
         except ValueError:
             logger.info(f"Skipping node {n} because there is only one class present in labels")
 
