@@ -174,14 +174,14 @@ logger.info("Finished training base model")
 noisy_G = edge_list_to_edge_index("/users/spate116/singhlab/GCN_Integration/scripts/BI/pyro_model/data/sanity/noisy.data")
 gr_truth = is_noise(experiment, noisy_G)
 
+# --------------- DNFGExplainer --------------------
+dnfg_model_generator = lambda model, X, ei: DNFGExplainer(model, 8, X, ei, torch.device('cpu'))
+test_new_explainer(experiment, noisy_G, gr_truth, "DNFGExplainer", dnfg_model_generator, 3000, 1e-4)
+
 # --------------- BetaExplainer --------------------
 beta_model_generator = lambda model, X, ei: BetaExplainer(model, X, ei, torch.device('cpu'))
 test_new_explainer(experiment, noisy_G, gr_truth, "BetaExplainer", beta_model_generator, 20000, 1e-4)
 logger.info("Finished evaluating BetaExplainer on Sanity Check Experiment")
-
-# --------------- DNFGExplainer --------------------
-dnfg_model_generator = lambda model, X, ei: DNFGExplainer(model, 8, X, ei, torch.device('cpu'))
-test_new_explainer(experiment, noisy_G, gr_truth, "DNFGExplainer", dnfg_model_generator, 3000, 1e-4)
 
 exit()
 
