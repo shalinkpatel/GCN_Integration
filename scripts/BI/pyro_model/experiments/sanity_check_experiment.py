@@ -125,9 +125,7 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
     done = 0
     nodes = list(range(experiment.x.shape[0]))
     shuffle(nodes)
-    nodes = nodes[:int(round(0.25 * len(nodes)))]
-
-    nodes = [607]
+    nodes = nodes[:int(round(0.1 * len(nodes)))]
 
     X = experiment.x
     k = experiment.k
@@ -149,7 +147,7 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
             explainer.train(epochs, lr)
             logger.info(f"Time for graph {n}: {time.time() - start}")
             edge_mask = explainer.edge_mask()
- 
+
             for i, v in enumerate(labs.cpu().detach().numpy().tolist()):
                 if v == 1:
                     edge_mask[i] = 1
