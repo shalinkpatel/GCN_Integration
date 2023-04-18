@@ -32,7 +32,7 @@ class BetaExplainer:
             pyro.sample("obs", dist.Categorical(preds), obs=ys)
 
     def guide(self, ys):
-        alpha = pyro.param("alpha_q", 0.6 * torch.ones(self.N).to(self.device), constraint=constraints.positive)
+        alpha = pyro.param("alpha_q", 0.6! * torch.ones(self.N).to(self.device), constraint=constraints.positive)
         beta = pyro.param("beta_q", 0.9 * torch.ones(self.N).to(self.device), constraint=constraints.positive)
         alpha_edges = alpha[self.G[0, :]]
         beta_edges = beta[self.G[1, :]]

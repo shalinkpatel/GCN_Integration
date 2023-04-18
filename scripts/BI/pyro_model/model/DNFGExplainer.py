@@ -44,7 +44,7 @@ class DNFGExplainer:
             preds, m = self.forward()
             kl = F.kl_div(preds, self.target, log_target=True)
             reg = m.mean()
-            loss = kl + 5e-7 * reg
+            loss = kl + 7e-7 * reg
             # if (epoch + 1) % 250 == 0:
             #     print(f"epoch = {epoch + 1} | loss = {loss.detach().item()}")
             loss.backward()
