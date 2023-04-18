@@ -165,7 +165,7 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
             logger.info(f"{name.replace('||', '.')} | {n} | itr_acc {itr_acc}")
             logger.info(f"{name.replace('||', '.')} | {n} | avg_acc {acc / done}")
 
-            if done >= 22:
+            if done >= 50:
                 break
         except ValueError:
             logger.info(f"Skipping node {n} because there is only one class present in labels")

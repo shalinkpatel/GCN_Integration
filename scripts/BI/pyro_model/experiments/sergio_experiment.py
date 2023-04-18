@@ -10,7 +10,7 @@ import sys
 import time
 
 from torch_geometric.nn import SAGEConv, GraphConv
-from torch_geometric.nn import global_add_pool
+from torch_geometric.nn import global_mean_pool
 from torch_geometric.explain import Explainer, GNNExplainer, PGExplainer
 from torch_geometric.explain.metric.basic import groundtruth_metrics
 from torch_geometric.utils import k_hop_subgraph
@@ -84,7 +84,7 @@ def train_model(model, X, y, edge_index, device):
             best_weights = deepcopy(model.state_dict())
             model.to(device)
         print(f"Epoch {epoch} | Best Acc = {best_acc} | Loss = {loss_ep / len(idxs)} | Avg Max = {avg_max}")
-    print('=' * 20 + ' Ended Training ' + '=' * 20)  
+    print('=' * 20 + ' Ended Training ' + '=' * 20)
     correct = 0
     for n in range(y.shape[0]):
         probs = model(X[:, n:n + 1], edge_index)
