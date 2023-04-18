@@ -133,6 +133,8 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
     shuffle(nodes)
     nodes = nodes[:int(round(0.25 * len(nodes)))]
 
+    nodes = [607]
+
     X = experiment.x
     k = experiment.k
 
@@ -177,18 +179,12 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
 
             done += 1
 
-            logger.info(f"{name.replace('||', '.')} | {n} | itr_auc {itr_auc}")
-            logger.info(f"{name.replace('||', '.')} | {n} | avg_auc {auc / done}")
             logger.info(f"{name.replace('||', '.')} | {n} | itr_acc {itr_acc}")
             logger.info(f"{name.replace('||', '.')} | {n} | avg_acc {acc / done}")
-            logger.info(f"{name.replace('||', '.')} | {n} | itr_aupr {itr_aupr}")
-            logger.info(f"{name.replace('||', '.')} | {n} | avg_aupr {aupr / done}")
-            logger.info(f"{name.replace('||', '.')} | {n} | itr_f1 {itr_f1}")
-            logger.info(f"{name.replace('||', '.')} | {n} | avg_f1 {f1 / done}")
         except ValueError:
             logger.info(f"Skipping node {n} because there is only one class present in labels")
-        except AssertionError:
-            logger.info(f"Skippng node {n} due to an assertion error")
+
+    logger.info(f"{name.replace('||', '.')} | FINISHED | avg_acc {acc / done}")
 
 
 # --------------- Setting Up Data -----------------
