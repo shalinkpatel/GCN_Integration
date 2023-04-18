@@ -141,6 +141,10 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
             if labs.unique().shape[0] == 1:
                 raise ValueError
 
+            if labs.shape[0] > 100:
+                logger.info(f"Skipping node {n} because it is too large")
+                continue
+
             X_adj = X[subset]
             explainer = explainer_generator(experiment.model, X_adj, edge_index_adj)
             start = time.time()
