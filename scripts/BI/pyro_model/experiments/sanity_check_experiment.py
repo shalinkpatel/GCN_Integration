@@ -146,13 +146,14 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
             start = time.time()
             explainer.train(epochs, lr)
             logger.info(f"Time for graph {n}: {time.time() - start}")
-            edge_mask = explainer.edge_mask()
+            edge_mask = explainer.edge_mask().detach().cpu().numpy()
+            del explainer
 
             for i, v in enumerate(labs.cpu().detach().numpy().tolist()):
                 if v == 1:
                     edge_mask[i] = 1
 
-            itr_acc = accuracy_score(labs, np.array(list(map(lambda x: 0 if x <= 0.5 else 1, edge_mask.detach().cpu().numpy()))))
+            itr_acc = accuracy_score(labs, np.array(list(map(lambda x: 0 if x <= 0.5 else 1, edge_mask))))
             itr_accs.append(itr_acc)
             acc += itr_acc
             done += 1
