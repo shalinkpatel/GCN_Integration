@@ -198,7 +198,7 @@ gr_truth = is_noise(experiment, noisy_G)
 
 # --------------- BetaExplainer --------------------
 beta_model_generator = lambda model, X, ei: BetaExplainer(model, X, ei, torch.device('cpu'))
-test_new_explainer(experiment, noisy_G, gr_truth, "BetaExplainer", beta_model_generator, 25000, 1e-4)
+test_new_explainer(experiment, noisy_G, gr_truth, "BetaExplainer", beta_model_generator, 20000, 1e-4)
 logger.info("Finished evaluating BetaExplainer on Sanity Check Experiment")
 
 # --------------- DNFGExplainer --------------------

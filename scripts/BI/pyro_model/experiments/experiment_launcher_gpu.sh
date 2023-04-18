@@ -2,7 +2,7 @@
 #SBATCH -p gpu --gres=gpu:1
 #SBATCH -N 1
 #SBATCH -c 4
-#SBATCH --time 96:00:00
+#SBATCH --time 48:00:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=shalin_patel@brown.edu
