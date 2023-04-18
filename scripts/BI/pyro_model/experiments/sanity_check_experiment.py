@@ -119,14 +119,8 @@ def test_sampler(experiment: Experiment, edge_index: torch.Tensor, labels: torch
 def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels: torch.Tensor, name: str, explainer_generator, epochs: int, lr: float):
     logger.info(f"Testing sampler {name}")
 
-    auc = 0
     acc = 0
-    aupr = 0
-    f1 = 0
-    itr_aucs = []
     itr_accs = []
-    itr_auprs = []
-    itr_f1s = []
 
     done = 0
     nodes = list(range(experiment.x.shape[0]))
@@ -146,7 +140,6 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
             subset, edge_index_adj, mapping, edge_mask_hard = k_hop_subgraph(n, k, edge_index, relabel_nodes=True)
 
             labs = labels[edge_mask_hard]
-            logger.info(labs)
             if labs.unique().shape[0] == 1:
                 raise ValueError
 
@@ -156,27 +149,14 @@ def test_new_explainer(experiment: Experiment, edge_index: torch.Tensor, labels:
             explainer.train(epochs, lr)
             logger.info(f"Time for graph {n}: {time.time() - start}")
             edge_mask = explainer.edge_mask()
-            logger.info(edge_mask)
-
+ 
             for i, v in enumerate(labs.cpu().detach().numpy().tolist()):
                 if v == 1:
                     edge_mask[i] = 1
 
-            itr_auc = roc_auc_score(labs, edge_mask.cpu().detach().numpy(), average="weighted")
             itr_acc = accuracy_score(labs, np.array(list(map(lambda x: 0 if x <= 0.5 else 1, edge_mask.detach().cpu().numpy()))))
-            itr_aupr = average_precision_score(labs, edge_mask.cpu().detach().numpy(), average="weighted")
-            itr_f1 = f1_score(labs, np.array(list(map(lambda x: 0 if x <= 0.5 else 1, edge_mask.detach().cpu().numpy()))))
-
-            itr_aucs.append(itr_auc)
             itr_accs.append(itr_acc)
-            itr_auprs.append(itr_aupr)
-            itr_f1s.append(itr_f1)
-
-            auc += itr_auc
             acc += itr_acc
-            aupr += itr_aupr
-            f1 += itr_f1
-
             done += 1
 
             logger.info(f"{name.replace('||', '.')} | {n} | itr_acc {itr_acc}")
