@@ -39,7 +39,7 @@ for x in samples[:int(0.25 * len(samples))]:
     graph += 1
     start = time.time()
     explainer = DNFGExplainer(model, 8, X[:, x:x + 1], G, device)
-    explainer.train(3000, 1e-4)
+    explainer.train(3000, 1e-5)
     print(f"Time for graph {graph}: {time.time() - start}")
     explainer_mask = explainer.edge_mask().detach()
     print(f"Positive Accuracy: {(explainer_mask[gt_grn == 1] > 0.5).float().mean()}")
